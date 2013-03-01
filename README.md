@@ -1,8 +1,10 @@
-# Jekyll + lunr.js = Static websites with powerful full-text search using JavaScript
+# [Jekyll](http://jekyllrb.com/) + [lunr.js](http://lunrjs.com/) = Static websites with powerful full-text search using JavaScript
+
+Use lunr.js to provide simple full-text search in your browser for your Jekyll static website.
 
 ## How to use
 
-* Place jekyll_lunr_js_search.rb inside the `_plugins` folder in the root of your jekyll site.
+* Place `build/jekyll_lunr_js_search.rb` inside the `_plugins` folder in the root of your jekyll site.
 
 All pages' main content will be indexed to a `search.json` file ready for lunr.js to use.
 
