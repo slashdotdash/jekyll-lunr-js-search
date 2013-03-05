@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'nokogiri'
 require 'json'
 
 module Jekyll
@@ -9,30 +8,32 @@ module Jekyll
     def initialize(config = {})
       super(config)
       
-      @excludes = [] #config['lunr_excludes'] || []
+      @excludes = config['lunr_excludes'] || []
     end
 
-    # Index all pages except pages matching any value in config['lunr_excludes']
+    # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
     # The main content from each page is extracted and saved to disk as json
     def generate(site)
-      puts 'Indexing pages...'
+      puts 'Running the search indexer...'
 
       # gather pages and posts
       items = pages_to_index(site)
+      content_renderer = PageRenderer.new(site)
       index = []
-      
-      items.each do |item|              
-        page_text = extract_text(site, item)
-        
-        index << { 
-          :title => item.data['title'] || item.name, 
-          :url => item.url,
-          :date => item.date,
-          :categories => item.categories,
-          :body => page_text
+
+      items.each do |item|
+        entry = SearchEntry.create(item, content_renderer)
+
+        index << {
+          :title => entry.title, 
+          :url => entry.url,
+          :date => entry.date,
+          :categories => entry.categories,
+          :body => entry.body
         }
         
-        puts 'Indexed ' << item.url
+        puts 'Indexed ' << entry.url        
+        # $stdout.print(".");$stdout.flush;
       end
       
       json = JSON.pretty_generate({:entries => index})
@@ -50,7 +51,7 @@ module Jekyll
       # Keep the search.json file from being cleaned by Jekyll
       site.static_files << Jekyll::SearchIndexFile.new(site, site.dest, "/", filename)
 
-      puts 'Indexing done'
+      puts ''
     end
 
   private
@@ -60,18 +61,7 @@ module Jekyll
 
       # only process files that will be converted to .html and only non excluded files 
       items = items.find_all {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
-      # items.reject! {|i| i.data['exclude_from_search'] } 
-
-      # skip index pages
-      items.reject! {|i| i.is_a?(Jekyll::Page) && i.index? }
+      items.reject! {|i| i.data['exclude_from_search'] } 
     end
-    
-    # render the items, parse the output and get all text inside <p> elements
-    def extract_text(site, page)
-      page.render({}, site.site_payload)
-      doc = Nokogiri::HTML(page.output)
-      paragraphs = doc.search('p').map {|e| e.text }
-      paragraphs.join(" ").gsub("\r"," ").gsub("\n"," ")
-    end
-  end 
+  end
 end
