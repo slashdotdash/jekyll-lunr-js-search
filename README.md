@@ -18,8 +18,8 @@ A jQuery plugin is provided in `js/jquery.lunr.search.js` to handle the configur
 
 Dependencies for the jQuery plugin are as follows.
 
-* [jQuery](https://jquery.com)
-* [lunr.js](https://lunrjs.com)
+* [jQuery](http://jquery.com)
+* [lunr.js](http://lunrjs.com)
 * [Mustache.js](https://github.com/janl/mustache.js)
 * [date.format.js](http://blog.stevenlevithan.com/archives/date-time-format)
 * [URI.js](http://medialize.github.com/URI.js/)
