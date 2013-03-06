@@ -69,7 +69,7 @@
       // format the raw json into a form that is simpler to work with
       this.entries = $.map(data.entries, this.createEntry);
 
-      this.entries.forEach(function(entry) {
+      $.each(this.entries, function(idx, entry) {
         index.add(entry);
       });
     };
