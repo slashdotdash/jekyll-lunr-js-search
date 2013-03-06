@@ -1,8 +1,8 @@
 # [Jekyll](http://jekyllrb.com/) + [lunr.js](http://lunrjs.com/) = Static websites with powerful full-text search using JavaScript
 
-Use lunr.js to provide simple full-text search, using JavaScript in your browser, for your Jekyll static website.
+Use [lunr.js](https://lunrjs.com) to provide simple full-text search, using JavaScript in your browser, for your Jekyll static website.
 
-Inspired by Pascal Widdershoven's [Jekyll + indextank](https://github.com/PascalW/jekyll_indextank) and Michael Levin's [Sitemap.xml Generator](https://github.com/kinnetica/jekyll-plugins) plugin.
+Inspired by Pascal Widdershoven's [Jekyll + indextank](https://github.com/PascalW/jekyll_indextank) and Michael Levin's [Sitemap.xml Generator](https://github.com/kinnetica/jekyll-plugins) plugins.
 
 This Jekyll plugin handles the generation of a lunr.js compatible `.json` index file. Runtime search configuration is provided by a simple jQuery plugin.
 
@@ -18,8 +18,8 @@ A jQuery plugin is provided in `js/jquery.lunr.search.js` to handle the configur
 
 Dependencies for this plugin are as follows.
 
-* [jQuery](jquery.com)
-* [lunr.js](lunrjs.com)
+* [jQuery](https://jquery.com)
+* [lunr.js](https://lunrjs.com)
 * [Mustache.js](https://github.com/janl/mustache.js)
 * [date.format.js](http://blog.stevenlevithan.com/archives/date-time-format)
 * [URI.js](http://medialize.github.com/URI.js/)
@@ -35,7 +35,7 @@ Dependencies for this plugin are as follows.
     <script src="/js/URI.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="/js/jquery.lunr.search.js" type="text/javascript" charset="utf-8"></script>
     
-Ideally you would concatenate, minify and optimise these 6 .js files using uglify/Google closure/etc to produce a single `search.min.js` file to reference.
+Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference.
 
     <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
 
@@ -62,7 +62,7 @@ Amend the form's action URL as necessary for the search page on your own site.
 
 This may be initially hidden as the plugin will show the element when searching.
 
-### 6. Create a Mustache template to display the search result.
+### 6. Create a Mustache template to display the search results.
 
     {% raw %}
     <script id="search-results-template" type="text/mustache">
@@ -83,10 +83,12 @@ The fields available to display are as follows.
 
 #### entries
 List of search result entries (mandatory).
+#### date
+Raw published date for posts, or null for pages. Can be used to toggle display of the following dates in the template `{{#date}}has a date{{/date}} {{#!date}}no date{{/date}}`.
 #### pubdate
-Post published date formatted as 'yyyy-mm-dd' to be used in a html5 `<time datetime="{{pubdate}}">` element (posts only).
+Post published date, formatted as 'yyyy-mm-dd', to be used in a html5 `<time datetime="{{pubdate}}">` element (posts only).
 #### displaydate
-Post published date formatted as 'mmm dd, yyyy' such as Oct 12, 2012 (posts only)
+Post published date, formatted as 'mmm dd, yyyy', such as Oct 12, 2012 (posts only)
 #### title
 Title of the Jekyll page or post.
 #### url
@@ -99,7 +101,7 @@ URL of the Jekyll page or post that can be used to create a hyperlink `<a href="
         $('#search-query').lunrSearch({
           index:    '/search.json',             // URL of the `search.json` index data for your site
           results:  '#search-results',          // jQuery selector for the search results container
-          entries:  '.entries',                 // jQuery selector for the element to contain the results list, must be a child of the `results` element above.
+          entries:  '.entries',                 // jQuery selector for the element to contain the results list, must be a child of the results element above.
           template: '#search-results-template'  // jQuery selector for the Mustache.js template
         });
       });
@@ -119,7 +121,8 @@ Or add an array of exclusions (as individual regular expressions) to the site's 
 
 Search plugin is deployed to [10consulting.com/search](http://10consulting.com/search/).
 Some example search queries are [/search/?q=git](http://10consulting.com/search/?q=git), [/search/?q=cqrs](http://10consulting.com/search/?q=cqrs).
-It also features on-demand loading of the search plugin `.js` when focusing into the search field on the [homepage](http://10consulting.com/).
+
+It also features on-demand loading of the search plugin `.js` when focusing into the search field on the [homepage](http://10consulting.com/). Look at the browser network requests clicking into the search input.
 
 ## Building
 
@@ -132,10 +135,10 @@ Requires the following gems:
 * json
 * nokogiri
 
-    gem install nokogiri json
+Install using `gem install nokogiri json`
 
 To build to plugin.
 
     rake build
 
-Then copy `build/jekyll_lunr_js_search.rb` to your site's _plugins folder.
+Then copy `build/jekyll_lunr_js_search.rb` to your Jekyll site's _plugins folder.
