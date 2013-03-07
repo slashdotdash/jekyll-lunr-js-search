@@ -10,12 +10,7 @@ module Jekyll
     end
     
     def self.create_from_page(page, renderer)
-      title = extract_title(page)
-      
-      url = "#{page.instance_variable_get('@dir')}"
-      url = "#{url}/" if page.index?
-      url = File.join(url, page.dir) unless page.index?
-
+      title, url = extract_title_and_url(page)
       body = renderer.render(page)
       date = nil
       categories = []
@@ -24,23 +19,27 @@ module Jekyll
     end
     
     def self.create_from_post(post, renderer)
-      title = extract_title(post)
-      url = post.url
+      title, url = extract_title_and_url(post)
       body = renderer.render(post)
       date = post.date
       categories = post.categories
       
       SearchEntry.new(title, url, date, categories, body)
     end
-    
-    def self.extract_title(item)
-      item.data['title'] || item.name
+
+    def self.extract_title_and_url(item)
+      data = item.to_liquid
+      [ data['title'], data['url'] ]
     end
 
     attr_reader :title, :url, :date, :categories, :body
     
     def initialize(title, url, date, categories, body)
       @title, @url, @date, @categories, @body = title, url, date, categories, body
+    end
+    
+    def strip_index_suffix_from_url!
+      @url.gsub!(/index\.html$/, '')
     end
   end
 

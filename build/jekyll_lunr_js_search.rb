@@ -9,6 +9,9 @@ module Jekyll
       super(config)
       
       @excludes = config['lunr_excludes'] || []
+      
+      # if web host supports index.html as default doc, then optionally exclude it from the url 
+      @strip_index_html = config['lunr_strip_index_html'] || false
     end
 
     # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -24,6 +27,8 @@ module Jekyll
       items.each do |item|
         entry = SearchEntry.create(item, content_renderer)
 
+        entry.strip_index_suffix_from_url! if @strip_index_html
+
         index << {
           :title => entry.title, 
           :url => entry.url,
@@ -32,7 +37,7 @@ module Jekyll
           :body => entry.body
         }
         
-        puts 'Indexed ' << entry.url        
+        puts 'Indexed ' << "#{entry.title} (#{entry.url})"
         # $stdout.print(".");$stdout.flush;
       end
       
@@ -60,8 +65,10 @@ module Jekyll
       items = site.pages.dup.concat(site.posts)
 
       # only process files that will be converted to .html and only non excluded files 
-      items = items.find_all {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
+      items.select! {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
       items.reject! {|i| i.data['exclude_from_search'] } 
+      
+      items
     end
   end
 end
@@ -96,12 +103,7 @@ module Jekyll
     end
     
     def self.create_from_page(page, renderer)
-      title = extract_title(page)
-      
-      url = "#{page.instance_variable_get('@dir')}"
-      url = "#{url}/" if page.index?
-      url = File.join(url, page.dir) unless page.index?
-
+      title, url = extract_title_and_url(page)
       body = renderer.render(page)
       date = nil
       categories = []
@@ -110,23 +112,27 @@ module Jekyll
     end
     
     def self.create_from_post(post, renderer)
-      title = extract_title(post)
-      url = post.url
+      title, url = extract_title_and_url(post)
       body = renderer.render(post)
       date = post.date
       categories = post.categories
       
       SearchEntry.new(title, url, date, categories, body)
     end
-    
-    def self.extract_title(item)
-      item.data['title'] || item.name
+
+    def self.extract_title_and_url(item)
+      data = item.to_liquid
+      [ data['title'], data['url'] ]
     end
 
     attr_reader :title, :url, :date, :categories, :body
     
     def initialize(title, url, date, categories, body)
       @title, @url, @date, @categories, @body = title, url, date, categories, body
+    end
+    
+    def strip_index_suffix_from_url!
+      @url.gsub!(/index\.html$/, '')
     end
   end
 

@@ -9,6 +9,9 @@ module Jekyll
       super(config)
       
       @excludes = config['lunr_excludes'] || []
+      
+      # if web host supports index.html as default doc, then optionally exclude it from the url 
+      @strip_index_html = config['lunr_strip_index_html'] || false
     end
 
     # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -24,6 +27,8 @@ module Jekyll
       items.each do |item|
         entry = SearchEntry.create(item, content_renderer)
 
+        entry.strip_index_suffix_from_url! if @strip_index_html
+
         index << {
           :title => entry.title, 
           :url => entry.url,
@@ -32,7 +37,7 @@ module Jekyll
           :body => entry.body
         }
         
-        puts 'Indexed ' << entry.url        
+        puts 'Indexed ' << "#{entry.title} (#{entry.url})"
         # $stdout.print(".");$stdout.flush;
       end
       
@@ -60,8 +65,10 @@ module Jekyll
       items = site.pages.dup.concat(site.posts)
 
       # only process files that will be converted to .html and only non excluded files 
-      items = items.find_all {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
+      items.select! {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
       items.reject! {|i| i.data['exclude_from_search'] } 
+      
+      items
     end
   end
 end
