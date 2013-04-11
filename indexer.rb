@@ -62,7 +62,10 @@ module Jekyll
   private
     
     def pages_to_index(site)
-      items = site.pages.dup.concat(site.posts)
+      # Deep copy pages
+      items = []
+      site.pages.each {|page| items << page.dup }
+      site.posts.each {|post| items << post.dup }
 
       # only process files that will be converted to .html and only non excluded files 
       items.select! {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
