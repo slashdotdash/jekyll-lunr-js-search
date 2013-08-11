@@ -117,6 +117,15 @@ Or add an array of exclusions (as individual regular expressions) to the site's 
     
     lunr_excludes: [rss.xml, atom.xml]
 
+### 9. Stop Words
+
+You can also configure a stopwords file, and a minimum length of word to be included in the index file. This can be done by adding a search block to `_config.yml`. The default values are:
+    search:
+      stopwords: "stopwords.txt"
+      min_length: 3
+
+The stopwords file must consist of one word per line, in lowercase, without punctuation.
+
 ## Demo
 
 Search plugin is deployed to [10consulting.com/search](http://10consulting.com/search/).
