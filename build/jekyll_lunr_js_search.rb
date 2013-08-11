@@ -12,6 +12,9 @@ module Jekyll
       
       # if web host supports index.html as default doc, then optionally exclude it from the url 
       @strip_index_html = config['lunr_strip_index_html'] || false
+
+      @min_length = config['search']['min_length'] || 3
+      @stopwords_file = config['search']['stopwords'] || 'stopwords.txt'
     end
 
     # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -34,14 +37,14 @@ module Jekyll
           :url => entry.url,
           :date => entry.date,
           :categories => entry.categories,
-          :body => entry.body
+          :body => strip_stopwords(entry.body)
         }
         
         puts 'Indexed ' << "#{entry.title} (#{entry.url})"
         # $stdout.print(".");$stdout.flush;
       end
       
-      json = JSON.pretty_generate({:entries => index})
+      json = JSON.generate({:entries => index})
       
       # Create destination directory if it doesn't exist yet. Otherwise, we cannot write our file there.
       Dir::mkdir(site.dest) unless File.directory?(site.dest)
@@ -60,7 +63,19 @@ module Jekyll
     end
 
   private
-    
+    # load the stopwords file
+    def stopwords
+      @stopwords = IO.readlines(@stopwords_file).map { |l| l.strip } unless @stopwords
+      @stopwords
+    end
+    def strip_stopwords(text) 
+      # remove anything that is in the stop words list from the text to be indexed
+      s = stopwords()
+      text.split.delete_if() do |x| 
+        t = x.downcase.gsub(/[^a-z]/,'')
+        t.length < @min_length || s.include?(t)
+      end.join(' ')
+    end
     def pages_to_index(site)
       # Deep copy pages
       items = []
