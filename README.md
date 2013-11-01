@@ -114,13 +114,15 @@ Add the following `exclude_from_search` setting to any page's YAML config.
     exclude_from_search: true
 
 Or add an array of exclusions (as individual regular expressions) to the site's `_config.yml` file.
-    
-    lunr_excludes: [rss.xml, atom.xml]
+
+    lunr_search:
+      excludes: [rss.xml, atom.xml]
 
 ### 9. Stop Words
 
 You can also configure a stopwords file, and a minimum length of word to be included in the index file. This can be done by adding a search block to `_config.yml`. The default values are:
-    search:
+
+    lunr_search:
       stopwords: "stopwords.txt"
       min_length: 3
 

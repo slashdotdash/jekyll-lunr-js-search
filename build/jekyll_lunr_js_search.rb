@@ -8,13 +8,21 @@ module Jekyll
     def initialize(config = {})
       super(config)
       
-      @excludes = config['lunr_excludes'] || []
+      lunr_config = { 
+        'excludes' => [],
+        'strip_index_html' => false,
+        'min_length' => 3,
+        'stopwords' => 'stopwords.txt'
+      }.merge!(config['lunr_search'])
+      
+      @excludes = lunr_config['excludes']
       
       # if web host supports index.html as default doc, then optionally exclude it from the url 
-      @strip_index_html = config['lunr_strip_index_html'] || false
+      @strip_index_html = lunr_config['strip_index_html']
 
-      @min_length = config['search']['min_length'] || 3
-      @stopwords_file = config['search']['stopwords'] || 'stopwords.txt'
+      # stop word exclusion configuration
+      @min_length = lunr_config['min_length']
+      @stopwords_file = lunr_config['stopwords']
     end
 
     # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -31,17 +39,17 @@ module Jekyll
         entry = SearchEntry.create(item, content_renderer)
 
         entry.strip_index_suffix_from_url! if @strip_index_html
-
+        entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
+        
         index << {
           :title => entry.title, 
           :url => entry.url,
           :date => entry.date,
           :categories => entry.categories,
-          :body => strip_stopwords(entry.body)
+          :body => entry.body
         }
         
         puts 'Indexed ' << "#{entry.title} (#{entry.url})"
-        # $stdout.print(".");$stdout.flush;
       end
       
       json = JSON.generate({:entries => index})
@@ -58,27 +66,19 @@ module Jekyll
 
       # Keep the search.json file from being cleaned by Jekyll
       site.static_files << Jekyll::SearchIndexFile.new(site, site.dest, "/", filename)
-
-      puts ''
     end
 
   private
+    
     # load the stopwords file
     def stopwords
-      @stopwords = IO.readlines(@stopwords_file).map { |l| l.strip } unless @stopwords
-      @stopwords
+      @stopwords ||= IO.readlines(@stopwords_file).map { |l| l.strip }
     end
-    def strip_stopwords(text) 
-      # remove anything that is in the stop words list from the text to be indexed
-      s = stopwords()
-      text.split.delete_if() do |x| 
-        t = x.downcase.gsub(/[^a-z]/,'')
-        t.length < @min_length || s.include?(t)
-      end.join(' ')
-    end
+    
     def pages_to_index(site)
-      # Deep copy pages
       items = []
+      
+      # deep copy pages
       site.pages.each {|page| items << page.dup }
       site.posts.each {|post| items << post.dup }
 
@@ -152,8 +152,15 @@ module Jekyll
     def strip_index_suffix_from_url!
       @url.gsub!(/index\.html$/, '')
     end
+    
+    # remove anything that is in the stop words list from the text to be indexed
+    def strip_stopwords!(stopwords, min_length)
+      @body = @body.split.delete_if() do |x| 
+        t = x.downcase.gsub(/[^a-z]/, '')
+        t.length < min_length || stopwords.include?(t)
+      end.join(' ')
+    end    
   end
-
 end
 module Jekyll
   
