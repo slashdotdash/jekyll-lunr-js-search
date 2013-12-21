@@ -55,7 +55,11 @@
     
     // compile search results template
     LunrSearch.prototype.compileTemplate = function($template) {      
-      return Mustache.compile($template.text());
+      var template = $template.text();
+      Mustache.parse(template);
+      return function (view, partials) {
+        return Mustache.render(template, view, partials);
+      };
     };
         
     // load the search index data
