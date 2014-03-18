@@ -103,9 +103,15 @@
     
     LunrSearch.prototype.bindKeypress = function() {
       var self = this;
+      var oldValue = this.$elem.val();
 
       this.$elem.bind('keyup', debounce(function() {
-        self.search($(this).val());
+        var newValue = self.$elem.val();
+        if (newValue !== oldValue) {
+          self.search(newValue);
+        }
+
+        oldValue = newValue;
       }));
     };
     
