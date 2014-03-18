@@ -20,19 +20,19 @@
   var parseDate = function(input) {
     var parts = input.match(/(\d+)/g);
     return new Date(parts[0], parts[1]-1, parts[2]); // months are 0-based
-  }
+  };
   
   var LunrSearch = (function() {
     function LunrSearch(elem, options) {
       this.$elem = elem;      
-      this.$results = $(options.results),
-      this.$entries = $(options.entries, this.$results),
+      this.$results = $(options.results);
+      this.$entries = $(options.entries, this.$results);
       this.indexDataUrl = options.indexUrl;
       this.index = this.createIndex();
       this.template = this.compileTemplate($(options.template));
       
       this.initialize();
-    };
+    }
         
     LunrSearch.prototype.initialize = function() {
       var self = this;
@@ -89,7 +89,7 @@
           date: parseDate(raw.date),
           pubdate: function() {
             // HTML5 pubdate
-            return dateFormat(parseDate(raw.date), 'yyyy-mm-dd')
+            return dateFormat(parseDate(raw.date), 'yyyy-mm-dd');
           },
           displaydate: function() {
             // only for posts (e.g. Oct 12, 2012)
@@ -123,7 +123,7 @@
         this.$entries.empty();
       } else {
         var results = $.map(this.index.search(query), function(result) {
-          return $.grep(entries, function(entry) { return entry.id === parseInt(result.ref, 10) })[0];
+          return $.grep(entries, function(entry) { return entry.id === parseInt(result.ref, 10); })[0];
         });
         
         this.displayResults(results);
@@ -137,7 +137,7 @@
       $entries.empty();
       
       if (entries.length === 0) {
-        $entries.append('<p>Nothing found.</p>')
+        $entries.append('<p>Nothing found.</p>');
       } else {
         $entries.append(this.template({entries: entries}));
       }
