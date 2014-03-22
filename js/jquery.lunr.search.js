@@ -118,7 +118,7 @@
     LunrSearch.prototype.search = function(query) {
       var entries = this.entries;
       
-      if (query.length <= 2) {
+      if (query.length < 2) {
         this.$results.hide();
         this.$entries.empty();
       } else {
