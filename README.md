@@ -24,9 +24,21 @@ Dependencies for the jQuery plugin are as follows.
 * [date.format.js](http://blog.stevenlevithan.com/archives/date-time-format)
 * [URI.js](http://medialize.github.com/URI.js/)
 
-### 2. Copy the `js/jquery.lunr.search.js` to your Jekyll site's JavaScript directory.
+A pre-built version of the jQuery plugin, along with all of the above dependencies, concatenated and minified is available from at [build/search.min.js](https://github.com/slashdotdash/jekyll-lunr-js-search/blob/master/build/search.min.js).
 
-### 3. Add a script reference to the bottom of your nominated search page for `jquery.lunr.search.js` and each of the dependencies outlined above.
+### 2. Copy the jQuery plugin and add a script reference.
+
+#### 2.1 Using the pre-built, minified plugin.
+
+1. Copy `build/search.min.js` to your Jekyll site's JavaScript directory.
+2. Add a script reference to the bottom of your nominated search page for `search.min.js`.
+
+    <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
+
+#### 2.2 Using the jQuery plugin and managing its dependencies yourself.
+
+1. Copy `js/jquery.lunr.search.js` to your Jekyll site's JavaScript directory.
+2. Add a script reference to the bottom of your nominated search page for `jquery.lunr.search.js` and each of the dependencies outlined above.
 
     <script src="/js/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="/js/lunr.min.js" type="text/javascript" charset="utf-8"></script>
@@ -35,7 +47,7 @@ Dependencies for the jQuery plugin are as follows.
     <script src="/js/URI.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="/js/jquery.lunr.search.js" type="text/javascript" charset="utf-8"></script>
     
-Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference.
+Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference (or use the pre-built script as described in 2.1 above).
 
     <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
 
