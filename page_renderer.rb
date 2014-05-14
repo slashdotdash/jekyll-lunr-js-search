@@ -12,7 +12,7 @@ module Jekyll
       item.render({}, @site.site_payload)
       doc = Nokogiri::HTML(item.output)
       paragraphs = doc.search('//text()').map {|t| t.content }
-      paragraphs = paragraphs.join(" ").gsub("\r"," ").gsub("\n"," ").gsub("\t"," ")
+      paragraphs = paragraphs.join(" ").gsub("\r", " ").gsub("\n", " ").gsub("\t", " ").gsub(/\s+/, " ")
     end
   end
   
