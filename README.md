@@ -10,7 +10,23 @@ It allows full-text search of all your Jekyll pages and posts. Executed by the c
 
 ## How to use
 
-### 1. Place `build/jekyll_lunr_js_search.rb` inside the `_plugins` folder in the root of your Jekyll site.
+### 1. Install the plugin
+
+Choose to install as either a Ruby Gem, or by copying the pre-built plugin file to your Jekyll site.
+
+#### 1a. Install as a Ruby Gem
+
+1. Install the [jekyll-lunr-js-search](https://rubygems.org/gems/jekyll-lunr-js-search) Ruby Gem.
+
+      gem install jekyll-lunr-js-search
+
+2. Modify your Jekyll `_config.yml` file to include the Gem.
+
+      gems: ['jekyll-lunr-js-search']
+
+#### 1b. Install by copying the plugin to your Jekyll site.
+
+1. Place `build/jekyll_lunr_js_search.rb` inside the `_plugins` folder in the root of your Jekyll site.
 
 The content from all Jekyll posts and pages will be indexed to a `search.json` file ready for lunr.js to consume. This happens each time the site is generated.
 
@@ -28,14 +44,14 @@ A pre-built version of the jQuery plugin, along with all of the above dependenci
 
 ### 2. Copy the jQuery plugin and add a script reference.
 
-#### 2.1 Using the pre-built, minified plugin.
+#### 2a. Using the pre-built, minified plugin.
 
 1. Copy `build/search.min.js` to your Jekyll site's JavaScript directory.
 2. Add a script reference to the bottom of your nominated search page for `search.min.js`.
 
         <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
 
-#### 2.2 Using the jQuery plugin and managing its dependencies yourself.
+#### 2b. Using the jQuery plugin and managing its dependencies yourself.
 
 1. Copy `js/jquery.lunr.search.js` to your Jekyll site's JavaScript directory.
 2. Add a script reference to the bottom of your nominated search page for `jquery.lunr.search.js` and each of the dependencies outlined above.
