@@ -18,11 +18,11 @@ Choose to install as either a Ruby Gem, or by copying the pre-built plugin file 
 
 1. Install the [jekyll-lunr-js-search](https://rubygems.org/gems/jekyll-lunr-js-search) Ruby Gem.
 
-      gem install jekyll-lunr-js-search
+        gem install jekyll-lunr-js-search
 
 2. Modify your Jekyll `_config.yml` file to include the Gem.
 
-      gems: ['jekyll-lunr-js-search']
+        gems: ['jekyll-lunr-js-search']
 
 #### 1b. Install by copying the plugin to your Jekyll site.
 
