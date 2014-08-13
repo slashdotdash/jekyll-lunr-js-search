@@ -11,7 +11,7 @@ task :create_build_dir do
 end
 
 task :copy_jekyll_plugin do
-	system('ls *.rb | while read file; do cat $file; echo ""; done > build/jekyll_lunr_js_search.rb')
+	system('ls lib/jekyll_lunr_js_search/*.rb | while read file; do cat $file; echo ""; done > build/jekyll_lunr_js_search.rb')
 end
 
 task :concat_js do

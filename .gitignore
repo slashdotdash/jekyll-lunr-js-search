@@ -1,6 +1,7 @@
 bower_components
 *.gem
 *.rbc
+Gemfile.lock
 .bundle
 .config
 coverage
