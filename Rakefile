@@ -20,7 +20,7 @@ task :concat_js do
     	'bower_components/jquery/dist/jquery.js',
     	'bower_components/lunr.js/lunr.js',
     	'bower_components/mustache/mustache.js',
-    	'bower_components/date.format/index.js',
+    	'bower_components/date.format/date.format.js',
     	'bower_components/uri.js/src/URI.js',
     	'js/jquery.lunr.search.js'
     ]
