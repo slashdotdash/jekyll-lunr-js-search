@@ -40,7 +40,8 @@ module Jekyll
           entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
           
           index << {
-            :title => entry.title, 
+            :title => entry.title,
+            :baseurl => site.config['baseurl'],
             :url => entry.url,
             :date => entry.date,
             :categories => entry.categories,
