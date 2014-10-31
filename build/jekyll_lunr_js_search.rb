@@ -32,6 +32,12 @@ module Jekyll
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
         index = []
+        
+        site.collections.each do |name, collection|
+          collection.docs.each do |document|
+            items << document
+          end
+        end
 
         items.each do |item|
           entry = SearchEntry.create(item, content_renderer)
@@ -45,10 +51,12 @@ module Jekyll
             :url => entry.url,
             :date => entry.date,
             :categories => entry.categories,
+            :collection => entry.collection,
+            :class => entry.class,
             :body => entry.body
           }
           
-          puts 'Indexed ' << "#{entry.title} (#{entry.url})"
+          puts 'Indexed ' << "#{entry.title} (#{entry.collection} - #{entry.url})"
         end
         
         json = JSON.generate({:entries => index})
@@ -114,10 +122,17 @@ require 'nokogiri'
 module Jekyll
   module LunrJsSearch
     class SearchEntry
-      def self.create(page_or_post, renderer)
+      def self.create(page_or_post, renderer, collection = nil)
         return create_from_post(page_or_post, renderer) if page_or_post.is_a?(Jekyll::Post)
         return create_from_page(page_or_post, renderer) if page_or_post.is_a?(Jekyll::Page)
+        return create_from_document(page_or_pose, renderer) if page_or_post.is_a?(Jekyll::Document)
         raise 'Not supported'
+      end
+      
+      def self.create_from_document(document, renderer)
+        data = document.to_liquid
+        
+        SearchEntry.new(data['title'], data['url'], Time.now, '', data['content'], data['collection'])
       end
       
       def self.create_from_page(page, renderer)
@@ -126,7 +141,7 @@ module Jekyll
         date = nil
         categories = []
         
-        SearchEntry.new(title, url, date, categories, body)
+        SearchEntry.new(title, url, date, categories, body, nil)
       end
       
       def self.create_from_post(post, renderer)
@@ -135,7 +150,7 @@ module Jekyll
         date = post.date
         categories = post.categories
         
-        SearchEntry.new(title, url, date, categories, body)
+        SearchEntry.new(title, url, date, categories, body, nil)
       end
 
       def self.extract_title_and_url(item)
@@ -143,10 +158,10 @@ module Jekyll
         [ data['title'], data['url'] ]
       end
 
-      attr_reader :title, :url, :date, :categories, :body
+      attr_reader :title, :url, :date, :categories, :body, :collection
       
       def initialize(title, url, date, categories, body)
-        @title, @url, @date, @categories, @body = title, url, date, categories, body
+        @title, @url, @date, @categories, @body, @collection = title, url, date, categories, body, collection
       end
       
       def strip_index_suffix_from_url!
