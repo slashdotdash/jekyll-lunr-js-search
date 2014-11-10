@@ -169,15 +169,12 @@ To build the single `jekyll_lunr_js_search.rb` plugin file.
 
 ### Requirements
 
-Requires the following gems:
+Install [Bundler](http://bundler.io/) and then run the following.
 
-* json
-* nokogiri
+	bundle install
 
-Install using `gem install nokogiri json`
-
-To build to plugin.
+To build the plugin.
 
     rake build
 
-Then copy `build/jekyll_lunr_js_search.rb` to your Jekyll site's _plugins folder.
+Then copy `build/jekyll_lunr_js_search.rb` to your Jekyll site's `_plugins` folder.
