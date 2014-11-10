@@ -29,6 +29,7 @@
       this.$entries = $(options.entries, this.$results);
       this.indexDataUrl = options.indexUrl;
       this.index = this.createIndex();
+      this.category = options.category;
       this.template = this.compileTemplate($(options.template));
       
       this.initialize();
@@ -69,13 +70,29 @@
     
     LunrSearch.prototype.populateIndex = function(data) {
       var index = this.index;
-          
+      var category = this.category
+
       // format the raw json into a form that is simpler to work with
       this.entries = $.map(data.entries, this.createEntry);
 
+      // if category is set only index documents with that category.
       $.each(this.entries, function(idx, entry) {
-        index.add(entry);
+          if(category != ""){
+              if(entry.categories.contains(category)){
+                  index.add(entry);
+              }
+          }else{
+              index.add(entry);
+          }
       });
+    };
+
+    Array.prototype.contains = function(element){
+      for(var i = 0; i < this.length; i++){
+          if(this[i].indexOf(element) > -1){
+              return true;
+          }
+      }
     };
 
     LunrSearch.prototype.createEntry = function(raw, index) {
@@ -173,6 +190,7 @@
     indexUrl  : '/search.json',     // Url for the .json file containing search index source data (containing: title, url, date, body)
     results   : '#search-results',  // selector for containing search results element
     entries   : '.entries',         // selector for search entries containing element (contained within results above)
-    template  : '#search-results-template'  // selector for Mustache.js template
+    template  : '#search-results-template',  // selector for Mustache.js template
+    category  : ''
   };
 })(jQuery);
