@@ -36,6 +36,7 @@ module Jekyll
           end
         end
         @index = ctx.eval('lunr(indexer)')
+        @lunr_version = ctx.eval('lunr.version')
         @docs = {}
         @excludes = lunr_config['excludes']
         
@@ -88,7 +89,7 @@ module Jekyll
 
         filepath = File.join(site.dest, filename)
         File.open(filepath, "w") { |f| f.write(total.to_json) }
-        Jekyll.logger.info "Lunr:", "Index ready"
+        Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
         added_files = [filename]
 
         site_js = File.join(site.dest, @js_dir)
