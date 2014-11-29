@@ -1,3 +1,4 @@
+require 'fileutils'
 require 'net/http'
 require 'json'
 require 'uri'
@@ -5,10 +6,6 @@ require 'uri'
 module Jekyll
   module LunrJsSearch
     class Indexer < Jekyll::Generator
-      LUNR_VERSION = "0.4.5"
-      LUNR_URL = "https://raw.githubusercontent.com/olivernn/lunr.js/v#{LUNR_VERSION}/lunr.js"
-      LOCAL_LUNR = "_plugins/lunr-#{LUNR_VERSION}.js"
-
       def initialize(config = {})
         super(config)
         return if ARGV.include?("--no-lunr-index")
@@ -22,19 +19,17 @@ module Jekyll
             'title' => 10,
             'tags' => 20,
             'body' => 1
-          }
+          },
+          'js_dir' => 'js'
         }.merge!(config['lunr_search'] || {})
 
-        if !File.exist?(LOCAL_LUNR)
-          res = Net::HTTP.get_response(URI.parse(LUNR_URL))
-          raise "Could not retrieve Lunr.js (GitHub returned #{res.code})" unless res.code == "200"
-          open(LOCAL_LUNR, "w") do |f|
-            f.write res.body
-          end
-        end
+        @js_dir = lunr_config['js_dir']
+        gem_lunr = File.join(__dir__, "../../build/lunr.min.js")
+        @lunr_path = File.exist?(gem_lunr) ? gem_lunr : File.join(@js_dir, File.basename(gem_lunr))
+        raise "Could not find #{@lunr_path}" if !File.exist?(@lunr_path)
 
         ctx = V8::Context.new
-        ctx.load(LOCAL_LUNR)
+        ctx.load(@lunr_path)
         ctx['indexer'] = proc do |this|
           this.ref('id')
           lunr_config['fields'].each_pair do |name, boost|
@@ -42,6 +37,7 @@ module Jekyll
           end
         end
         @index = ctx.eval('lunr(indexer)')
+        @lunr_version = ctx.eval('lunr.version')
         @docs = {}
         @excludes = lunr_config['excludes']
         
@@ -57,10 +53,10 @@ module Jekyll
       # The main content from each page is extracted and saved to disk as json
       def generate(site)
         if @index.nil?
-          puts 'Skipping indexing as user request'
+          Jekyll.logger.info "Lunr:", 'Skipping search indexing at user request'
           return
         end
-        puts 'Running the search indexer...'
+        Jekyll.logger.info "Lunr:", 'Creating search index...'
 
         # gather pages and posts
         items = pages_to_index(site)
@@ -85,26 +81,36 @@ module Jekyll
           doc.delete("body")
           @docs[i] = doc
           
-          puts 'Indexed ' << "#{entry.title} (#{entry.url})"
+          Jekyll.logger.debug "Lunr:", (entry.title ? "#{entry.title} (#{entry.url})" : entry.url)
         end
         
-        # Create destination directory if it doesn't exist yet. Otherwise, we cannot write our file there.
-        Dir::mkdir(site.dest) unless File.directory?(site.dest)
-        
-        # File I/O: create search.json file and write out pretty-printed JSON
-        filename = 'index.json'
+        FileUtils.mkdir_p(File.join(site.dest, @js_dir))
+        filename = File.join(@js_dir, 'index.json')
         
         total = {
           "docs" => @docs,
           "index" => @index.to_hash
         }
-        File.open(File.join(site.dest, filename), "w") do |file|
-          file.write(total.to_json)
-        end
-        puts 'Wrote index.json'
 
-        # Keep the index.json file from being cleaned by Jekyll
-        site.static_files << SearchIndexFile.new(site, site.dest, "/", filename)
+        filepath = File.join(site.dest, filename)
+        File.open(filepath, "w") { |f| f.write(total.to_json) }
+        Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
+        added_files = [filename]
+
+        site_js = File.join(site.dest, @js_dir)
+        # If we're using the gem, add the lunr and search JS files to the _site
+        if File.expand_path(site_js) != File.dirname(@lunr_path)
+          extras = Dir.glob(File.join(File.dirname(@lunr_path), "*.min.js"))
+          FileUtils.cp(extras, site_js)
+          extras.map! { |min| File.join(@js_dir, File.basename(min)) }
+          Jekyll.logger.debug "Lunr:", "Added JavaScript to #{@js_dir}"
+          added_files.push(*extras)
+        end
+
+        # Keep the written files from being cleaned by Jekyll
+        added_files.each do |filename|
+          site.static_files << SearchIndexFile.new(site, site.dest, "/", filename)
+        end
       end
 
       private
@@ -212,7 +218,7 @@ end
 module Jekyll
   module LunrJsSearch  
     class SearchIndexFile < Jekyll::StaticFile
-      # Override write as the search.json index file has already been created 
+      # Override write as the index.json index file has already been created 
       def write(dest)
         true
       end
@@ -221,6 +227,6 @@ module Jekyll
 end
 module Jekyll
   module LunrJsSearch
-    VERSION = "0.1.1"
+    VERSION = "0.2.0"
   end
 end

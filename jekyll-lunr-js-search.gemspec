@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.description   = 'Use lunr.js to provide simple full-text search, using JavaScript in your browser, for your Jekyll static website.'
   s.authors       = ['Ben Smith']
   s.email         = 'ben@10consulting.com'
-  s.files         = Dir.glob("lib/**/*.rb")
+  s.files         = Dir.glob("lib/**/*.rb") + Dir.glob("build/*.min.js")
   s.homepage      = 'https://github.com/slashdotdash/jekyll-lunr-js-search'
   s.require_paths = ['lib']
   
