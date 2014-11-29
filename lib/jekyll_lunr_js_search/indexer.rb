@@ -1,8 +1,14 @@
+require 'net/http'
 require 'json'
+require 'uri'
 
 module Jekyll
   module LunrJsSearch
     class Indexer < Jekyll::Generator
+      LUNR_VERSION = raise "Please use the built ruby file"
+      LUNR_URL = "https://raw.githubusercontent.com/olivernn/lunr.js/v#{LUNR_VERSION}/lunr.js"
+      LOCAL_LUNR = "_plugins/lunr-#{LUNR_VERSION}.js"
+
       def initialize(config = {})
         super(config)
         
@@ -10,9 +16,32 @@ module Jekyll
           'excludes' => [],
           'strip_index_html' => false,
           'min_length' => 3,
-          'stopwords' => 'stopwords.txt'
+          'stopwords' => 'stopwords.txt',
+          'fields' => {
+            'title' => 10,
+            'tags' => 20,
+            'body' => 1
+          }
         }.merge!(config['lunr_search'] || {})
-        
+
+        if !File.exist?(LOCAL_LUNR)
+          res = Net::HTTP.get_response(URI.parse(LUNR_URL))
+          raise "Could not retrieve Lunr.js (GitHub returned #{res.code})" unless res.code == "200"
+          open(LOCAL_LUNR, "w") do |f|
+            f.write res.body
+          end
+        end
+
+        ctx = V8::Context.new
+        ctx.load(LOCAL_LUNR)
+        ctx['indexer'] = proc do |this|
+          this.ref('id')
+          lunr_config['fields'].each_pair do |name, boost|
+            this.field(name, { 'boost' => boost })
+          end
+        end
+        @index = ctx.eval('lunr(indexer)')
+        @docs = {}
         @excludes = lunr_config['excludes']
         
         # if web host supports index.html as default doc, then optionally exclude it from the url 
@@ -33,37 +62,43 @@ module Jekyll
         content_renderer = PageRenderer.new(site)
         index = []
 
-        items.each do |item|
+        items.each_with_index do |item, i|
           entry = SearchEntry.create(item, content_renderer)
 
           entry.strip_index_suffix_from_url! if @strip_index_html
           entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
           
-          index << {
-            :title => entry.title,
-            :baseurl => site.config['baseurl'],
-            :url => entry.url,
-            :date => entry.date,
-            :categories => entry.categories,
-            :body => entry.body
+          doc = {
+            "id" => i,
+            "title" => entry.title,
+            "url" => entry.url,
+            "date" => entry.date,
+            "categories" => entry.categories,
+            "body" => entry.body
           }
+          @index.add(doc)
+          doc.delete("body")
+          @docs[i] = doc
           
           puts 'Indexed ' << "#{entry.title} (#{entry.url})"
         end
-        
-        json = JSON.generate({:entries => index})
         
         # Create destination directory if it doesn't exist yet. Otherwise, we cannot write our file there.
         Dir::mkdir(site.dest) unless File.directory?(site.dest)
         
         # File I/O: create search.json file and write out pretty-printed JSON
-        filename = 'search.json'
+        filename = 'index.json'
         
+        total = {
+          "docs" => @docs,
+          "index" => @index.to_hash
+        }
         File.open(File.join(site.dest, filename), "w") do |file|
-          file.write(json)
+          file.write(total.to_json)
         end
+        puts 'Wrote index.json'
 
-        # Keep the search.json file from being cleaned by Jekyll
+        # Keep the index.json file from being cleaned by Jekyll
         site.static_files << SearchIndexFile.new(site, site.dest, "/", filename)
       end
 

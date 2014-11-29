@@ -10,19 +10,13 @@ Gem::Specification.new do |s|
   s.description   = 'Use lunr.js to provide simple full-text search, using JavaScript in your browser, for your Jekyll static website.'
   s.authors       = ['Ben Smith']
   s.email         = 'ben@10consulting.com'
-  s.files         = [
-    'lib/jekyll-lunr-js-search.rb', 
-    'lib/jekyll_lunr_js_search/indexer.rb', 
-    'lib/jekyll_lunr_js_search/page_renderer.rb',
-    'lib/jekyll_lunr_js_search/search_entry.rb',
-    'lib/jekyll_lunr_js_search/search_index_file.rb',
-    'lib/jekyll_lunr_js_search/version.rb',
-  ]
+  s.files         = Dir.glob("lib/**/*.rb")
   s.homepage      = 'https://github.com/slashdotdash/jekyll-lunr-js-search'
   s.require_paths = ['lib']
   
   s.add_runtime_dependency 'nokogiri', '~> 1.6'
   s.add_runtime_dependency 'json', '~> 1.8'
+  s.add_runtime_dependency 'therubyracer', '~> 0.12'
 
   s.add_development_dependency 'rake', '~> 10.3'
   s.add_development_dependency 'uglifier', '~> 2.5'
