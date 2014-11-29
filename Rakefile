@@ -3,7 +3,15 @@ require 'uglifier'
 
 task :default => :build
 
-task :build => [:create_build_dir, :copy_jekyll_plugin, :concat_js, :minify_js] do
+task :build => [
+  :bower_update,
+  :create_build_dir,
+  :copy_jekyll_plugin,
+  :concat_js,
+  :minify_js]
+
+task :bower_update do
+  abort "Please ensure bower is installed: npm install -g bower" unless system('bower install')
 end
 
 task :create_build_dir do
