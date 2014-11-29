@@ -148,8 +148,11 @@ module Jekyll
       
       # render the item, parse the output and get all text inside <p> elements
       def render(item)
-        item.render({}, @site.site_payload)
-        Nokogiri::HTML(item.output).text
+        layoutless = item.dup
+        layoutless.data = layoutless.data.dup
+        layoutless.data.delete('layout')
+        layoutless.render({}, @site.site_payload)
+        Nokogiri::HTML(layoutless.output).text
       end
     end
   end  
