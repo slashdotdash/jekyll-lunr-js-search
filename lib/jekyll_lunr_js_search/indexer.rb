@@ -5,9 +5,8 @@ require 'uri'
 module Jekyll
   module LunrJsSearch
     class Indexer < Jekyll::Generator
-      LUNR_VERSION = raise "Please use the built ruby file"
-      LUNR_URL = "https://raw.githubusercontent.com/olivernn/lunr.js/v#{LUNR_VERSION}/lunr.js"
-      LOCAL_LUNR = "_plugins/lunr-#{LUNR_VERSION}.js"
+      LUNR_URL = "https://raw.githubusercontent.com/olivernn/lunr.js/v%{version}/lunr.js"
+      LOCAL_LUNR = "_plugins/lunr-%{version}.js"
 
       def initialize(config = {})
         super(config)
@@ -21,13 +20,16 @@ module Jekyll
             'title' => 10,
             'tags' => 20,
             'body' => 1
-          }
+          },
+          "lunr_version" => "0.4.5"
         }.merge!(config['lunr_search'] || {})
 
-        if !File.exist?(LOCAL_LUNR)
-          res = Net::HTTP.get_response(URI.parse(LUNR_URL))
-          raise "Could not retrieve Lunr.js (GitHub returned #{res.code})" unless res.code == "200"
-          open(LOCAL_LUNR, "w") do |f|
+        ver = { version: lunr_config['lunr_version'] }
+        local_lunr = LOCAL_LUNR % v
+        if !File.exist?(local_lunr)
+          res = Net::HTTP.get_response(URI.parse(lunr_url % ver))
+          raise "Could not retrieve Lunr.js #{ver[:version]} (GitHub returned #{res.code})" unless res.code == "200"
+          open(local_lunr, "w") do |f|
             f.write res.body
           end
         end
