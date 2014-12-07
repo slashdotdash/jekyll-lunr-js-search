@@ -46,11 +46,10 @@ A pre-built version of the jQuery plugin, along with all of the above dependenci
 
 #### 2a. Using the pre-built, minified plugin from the gem.
 
-The plugin will automatically add `js/search.min.js` and `js/lunr.min.js` to your `_site`.
+The plugin will automatically add the minified JavaScript file `js/search.min.js` to your `_site`.
 
-To use them you must add a script reference to the bottom of your nominated search page, make sure the reference to `lunr.min.js` is first.
+To use it, you must add a script reference to the bottom of your nominated search page.
 
-        <script src="/js/lunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
 
 #### 2b. Using the jQuery plugin and managing its dependencies yourself.
@@ -67,7 +66,7 @@ To use them you must add a script reference to the bottom of your nominated sear
 
 Make sure you use the same version of lunr.js as the gem. The Jekyll log output includes the version used.
     
-Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference (or use the pre-built script as described in 2.1 above).
+Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference (or use the pre-built script as described in 2a above).
 
     <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
 

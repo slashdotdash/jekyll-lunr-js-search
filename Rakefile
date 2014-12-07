@@ -40,6 +40,7 @@ task :concat_js do
     'bower_components/mustache/mustache.js',
     'bower_components/date.format/date.format.js',
     'bower_components/uri.js/src/URI.js',
+    'bower_components/lunr.js/lunr.min.js',
     'js/jquery.lunr.search.js'
   ]
 
@@ -48,6 +49,7 @@ task :concat_js do
       data << File.read(file)
     })
   end
+  
   # Lunr is stored separately so we can use it for index generation
   FileUtils.cp('bower_components/lunr.js/lunr.min.js', 'build/lunr.min.js')
 end

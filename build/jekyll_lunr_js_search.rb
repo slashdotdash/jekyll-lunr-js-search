@@ -2,6 +2,7 @@ require 'fileutils'
 require 'net/http'
 require 'json'
 require 'uri'
+require 'v8'
 
 module Jekyll
   module LunrJsSearch
