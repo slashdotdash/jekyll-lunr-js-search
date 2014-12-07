@@ -4,26 +4,19 @@ module Jekyll
   module LunrJsSearch
     class SearchEntry
       def self.create(page_or_post, renderer)
-        return create_from_post(page_or_post, renderer) if page_or_post.is_a?(Jekyll::Post)
-        return create_from_page(page_or_post, renderer) if page_or_post.is_a?(Jekyll::Page)
-        raise 'Not supported'
-      end
-      
-      def self.create_from_page(page, renderer)
-        title, url = extract_title_and_url(page)
-        body = renderer.render(page)
-        date = nil
-        categories = []
-        
-        SearchEntry.new(title, url, date, categories, body)
-      end
-      
-      def self.create_from_post(post, renderer)
-        title, url = extract_title_and_url(post)
-        body = renderer.render(post)
-        date = post.date
-        categories = post.categories
-        
+        case page_or_post
+        when Jekyll::Post
+          date = page_or_post.date
+          categories = page_or_post.categories
+        when Jekyll::Page
+          date = nil
+          categories = []
+        else 
+          raise 'Not supported'
+        end
+        title, url = extract_title_and_url(page_or_post)
+        body = renderer.render(page_or_post)
+
         SearchEntry.new(title, url, date, categories, body)
       end
 

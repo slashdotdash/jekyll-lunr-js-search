@@ -1,4 +1,7 @@
+require 'fileutils'
+require 'net/http'
 require 'json'
+require 'uri'
 
 module Jekyll
   module LunrJsSearch
@@ -10,9 +13,31 @@ module Jekyll
           'excludes' => [],
           'strip_index_html' => false,
           'min_length' => 3,
-          'stopwords' => 'stopwords.txt'
+          'stopwords' => 'stopwords.txt',
+          'fields' => {
+            'title' => 10,
+            'tags' => 20,
+            'body' => 1
+          },
+          'js_dir' => 'js'
         }.merge!(config['lunr_search'] || {})
-        
+
+        @js_dir = lunr_config['js_dir']
+        gem_lunr = File.join(__dir__, "../../build/lunr.min.js")
+        @lunr_path = File.exist?(gem_lunr) ? gem_lunr : File.join(@js_dir, File.basename(gem_lunr))
+        raise "Could not find #{@lunr_path}" if !File.exist?(@lunr_path)
+
+        ctx = V8::Context.new
+        ctx.load(@lunr_path)
+        ctx['indexer'] = proc do |this|
+          this.ref('id')
+          lunr_config['fields'].each_pair do |name, boost|
+            this.field(name, { 'boost' => boost })
+          end
+        end
+        @index = ctx.eval('lunr(indexer)')
+        @lunr_version = ctx.eval('lunr.version')
+        @docs = {}
         @excludes = lunr_config['excludes']
         
         # if web host supports index.html as default doc, then optionally exclude it from the url 
@@ -26,48 +51,64 @@ module Jekyll
       # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
       # The main content from each page is extracted and saved to disk as json
       def generate(site)
-        puts 'Running the search indexer...'
+        Jekyll.logger.info "Lunr:", 'Creating search index...'
 
         # gather pages and posts
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
         index = []
 
-        items.each do |item|
+        items.each_with_index do |item, i|
           entry = SearchEntry.create(item, content_renderer)
 
           entry.strip_index_suffix_from_url! if @strip_index_html
           entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
           
-          index << {
-            :title => entry.title,
-            :baseurl => site.config['baseurl'],
-            :url => entry.url,
-            :date => entry.date,
-            :categories => entry.categories,
-            :body => entry.body
+          doc = {
+            "id" => i,
+            "title" => entry.title,
+            "url" => entry.url,
+            "date" => entry.date,
+            "categories" => entry.categories,
+            "body" => entry.body
           }
+          @index.add(doc)
+          doc.delete("body")
+          @docs[i] = doc
           
-          puts 'Indexed ' << "#{entry.title} (#{entry.url})"
+          Jekyll.logger.debug "Lunr:", (entry.title ? "#{entry.title} (#{entry.url})" : entry.url)
         end
         
-        json = JSON.generate({:entries => index})
+        FileUtils.mkdir_p(File.join(site.dest, @js_dir))
+        filename = File.join(@js_dir, 'index.json')
         
-        # Create destination directory if it doesn't exist yet. Otherwise, we cannot write our file there.
-        Dir::mkdir(site.dest) unless File.directory?(site.dest)
-        
-        # File I/O: create search.json file and write out pretty-printed JSON
-        filename = 'search.json'
-        
-        File.open(File.join(site.dest, filename), "w") do |file|
-          file.write(json)
+        total = {
+          "docs" => @docs,
+          "index" => @index.to_hash
+        }
+
+        filepath = File.join(site.dest, filename)
+        File.open(filepath, "w") { |f| f.write(total.to_json) }
+        Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
+        added_files = [filename]
+
+        site_js = File.join(site.dest, @js_dir)
+        # If we're using the gem, add the lunr and search JS files to the _site
+        if File.expand_path(site_js) != File.dirname(@lunr_path)
+          extras = Dir.glob(File.join(File.dirname(@lunr_path), "*.min.js"))
+          FileUtils.cp(extras, site_js)
+          extras.map! { |min| File.join(@js_dir, File.basename(min)) }
+          Jekyll.logger.debug "Lunr:", "Added JavaScript to #{@js_dir}"
+          added_files.push(*extras)
         end
 
-        # Keep the search.json file from being cleaned by Jekyll
-        site.static_files << SearchIndexFile.new(site, site.dest, "/", filename)
+        # Keep the written files from being cleaned by Jekyll
+        added_files.each do |filename|
+          site.static_files << SearchIndexFile.new(site, site.dest, "/", filename)
+        end
       end
 
-    private
+      private
       
       # load the stopwords file
       def stopwords
