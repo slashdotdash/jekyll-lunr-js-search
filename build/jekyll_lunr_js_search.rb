@@ -89,7 +89,7 @@ module Jekyll
         }
 
         filepath = File.join(site.dest, filename)
-        File.open(filepath, "w") { |f| f.write(total.to_json) }
+        File.open(filepath, "w") { |f| f.write(JSON.dump(total)) }
         Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
         added_files = [filename]
 
@@ -132,6 +132,21 @@ module Jekyll
     end
   end
 end
+module Jekyll
+  module LunrJsSearch
+    VERSION = "0.2.1"
+  end
+end
+module Jekyll
+  module LunrJsSearch  
+    class SearchIndexFile < Jekyll::StaticFile
+      # Override write as the index.json index file has already been created 
+      def write(dest)
+        true
+      end
+    end
+  end
+end
 require "v8"
 require "json"
 
@@ -141,7 +156,7 @@ class V8::Object
   end
 
   def to_hash
-    JSON.parse(to_json)
+    JSON.parse(to_json, :max_nesting => false)
   end
 end
 require 'nokogiri'
@@ -209,20 +224,5 @@ module Jekyll
         end.join(' ')
       end
     end
-  end
-end
-module Jekyll
-  module LunrJsSearch  
-    class SearchIndexFile < Jekyll::StaticFile
-      # Override write as the index.json index file has already been created 
-      def write(dest)
-        true
-      end
-    end
-  end
-end
-module Jekyll
-  module LunrJsSearch
-    VERSION = "0.2.1"
   end
 end
