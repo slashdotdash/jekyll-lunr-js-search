@@ -115,6 +115,14 @@ module Jekyll
       def stopwords
         @stopwords ||= IO.readlines(@stopwords_file).map { |l| l.strip }
       end
+
+      def output_ext(doc)
+        if doc.is_a?(Jekyll::Document)
+          Jekyll::Renderer.new(@site, doc).output_ext
+        else
+          doc.output_ext
+        end
+      end
       
       def pages_to_index(site)
         items = []
@@ -122,9 +130,10 @@ module Jekyll
         # deep copy pages
         site.pages.each {|page| items << page.dup }
         site.posts.each {|post| items << post.dup }
+        site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files 
-        items.select! {|i| i.output_ext == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } } 
+        items.select! {|i| output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
         items.reject! {|i| i.data['exclude_from_search'] } 
         
         items
