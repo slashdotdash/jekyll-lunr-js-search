@@ -8,7 +8,7 @@ module Jekyll
         when Jekyll::Post
           date = page_or_post.date
           categories = page_or_post.categories
-        when Jekyll::Page
+        when Jekyll::Page, Jekyll::Document
           date = nil
           categories = []
         else 
@@ -17,7 +17,7 @@ module Jekyll
         title, url = extract_title_and_url(page_or_post)
         body = renderer.render(page_or_post)
 
-        SearchEntry.new(title, url, date, categories, body)
+        SearchEntry.new(title, url, date, categories, body, renderer)
       end
 
       def self.extract_title_and_url(item)

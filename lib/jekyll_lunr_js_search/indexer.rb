@@ -54,6 +54,7 @@ module Jekyll
       def generate(site)
         Jekyll.logger.info "Lunr:", 'Creating search index...'
 
+        @site = site
         # gather pages and posts
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
@@ -89,7 +90,7 @@ module Jekyll
         }
 
         filepath = File.join(site.dest, filename)
-        File.open(filepath, "w") { |f| f.write(total.to_json) }
+        File.open(filepath, "w") { |f| f.write(total.to_json(:max_nesting => 150)) }
         Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
         added_files = [filename]
 
