@@ -84,6 +84,10 @@
           }else{
               index.add(entry);
           }
+
+          if(entry.url != ""){
+              entry.url = entry.url.replace("/", "");
+          }
       });
     };
 
