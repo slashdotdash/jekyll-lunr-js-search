@@ -7,13 +7,22 @@ module Jekyll
         @site = site
       end
       
+      def prepare(item)
+        if item.is_a?(Jekyll::Document)
+          Jekyll::Renderer.new(@site, item).run        
+        else
+          item.data = item.data.dup
+          item.data.delete("layout")
+          item.render({}, @site.site_payload)
+          item.output
+        end
+      end
+
       # render the item, parse the output and get all text inside <p> elements
       def render(item)
         layoutless = item.dup
-        layoutless.data = layoutless.data.dup
-        layoutless.data.delete('layout')
-        layoutless.render({}, @site.site_payload)
-        Nokogiri::HTML(layoutless.output).text
+
+        Nokogiri::HTML(prepare(layoutless)).text
       end
     end
   end  
