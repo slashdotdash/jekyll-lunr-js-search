@@ -1,13 +1,3 @@
-module Jekyll
-  module LunrJsSearch  
-    class SearchIndexFile < Jekyll::StaticFile
-      # Override write as the index.json index file has already been created 
-      def write(dest)
-        true
-      end
-    end
-  end
-end
 require 'fileutils'
 require 'net/http'
 require 'json'
@@ -152,10 +142,46 @@ module Jekyll
     end
   end
 end
+require "v8"
+require "json"
+
+class V8::Object
+  def to_json
+    @context['JSON']['stringify'].call(self)
+  end
+
+  def to_hash
+    JSON.parse(to_json, :max_nesting => 150)
+  end
+end
+require 'nokogiri'
+
 module Jekyll
   module LunrJsSearch
-    VERSION = "0.2.1"
-  end
+    class PageRenderer
+      def initialize(site)
+        @site = site
+      end
+      
+      def prepare(item)
+        if item.is_a?(Jekyll::Document)
+          Jekyll::Renderer.new(@site, item).run        
+        else
+          item.data = item.data.dup
+          item.data.delete("layout")
+          item.render({}, @site.site_payload)
+          item.output
+        end
+      end
+
+      # render the item, parse the output and get all text inside <p> elements
+      def render(item)
+        layoutless = item.dup
+
+        Nokogiri::HTML(prepare(layoutless)).text
+      end
+    end
+  end  
 end
 require 'nokogiri'
 
@@ -204,44 +230,18 @@ module Jekyll
     end
   end
 end
-require 'nokogiri'
-
 module Jekyll
-  module LunrJsSearch
-    class PageRenderer
-      def initialize(site)
-        @site = site
-      end
-      
-      def prepare(item)
-        if item.is_a?(Jekyll::Document)
-          Jekyll::Renderer.new(@site, item).run        
-        else
-          item.data = item.data.dup
-          item.data.delete("layout")
-          item.render({}, @site.site_payload)
-          item.output
-        end
-      end
-
-      # render the item, parse the output and get all text inside <p> elements
-      def render(item)
-        layoutless = item.dup
-
-        Nokogiri::HTML(prepare(layoutless)).text
+  module LunrJsSearch  
+    class SearchIndexFile < Jekyll::StaticFile
+      # Override write as the index.json index file has already been created 
+      def write(dest)
+        true
       end
     end
-  end  
-end
-require "v8"
-require "json"
-
-class V8::Object
-  def to_json
-    @context['JSON']['stringify'].call(self)
   end
-
-  def to_hash
-    JSON.parse(to_json, :max_nesting => 150)
+end
+module Jekyll
+  module LunrJsSearch
+    VERSION = "0.3.0"
   end
 end
