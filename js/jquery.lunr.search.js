@@ -29,6 +29,7 @@
       this.$entries = $(options.entries, this.$results);
       this.indexDataUrl = options.indexUrl;
       this.template = this.compileTemplate($(options.template));
+      this.emptyMsg = options.emptyMsg;
 
       this.initialize();
     }
@@ -117,7 +118,7 @@
       $entries.empty();
       
       if (entries.length === 0) {
-        $entries.append('<p>Nothing found.</p>');
+        $entries.append('<p>'+ this.emptyMsg +'</p>');
       } else {
         $entries.append(this.template({entries: entries}));
       }
@@ -153,6 +154,7 @@
     indexUrl  : '/js/index.json',   // Url for the .json file containing search index data
     results   : '#search-results',  // selector for containing search results element
     entries   : '.entries',         // selector for search entries containing element (contained within results above)
-    template  : '#search-results-template'  // selector for Mustache.js template
+    template  : '#search-results-template',  // selector for Mustache.js template
+    emptyMsg  : 'Nothing found.'    // shown message if search returns no results
   };
 })(jQuery);
