@@ -130,7 +130,11 @@ module Jekyll
         
         # deep copy pages
         site.pages.each {|page| items << page.dup }
-        site.posts.each {|post| items << post.dup }
+        if defined?(site.posts.docs)
+          site.posts.docs.each {|post| items << post.dup }
+        else
+          site.posts.each {|post| items << post.dup }
+        end
         site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files 
