@@ -7,15 +7,24 @@ module Jekyll
         @site = site
       end
       
+      # render item, but without using its layout
       def prepare(item)
-        if item.is_a?(Jekyll::Document)
-          Jekyll::Renderer.new(@site, item).run        
-        else
-          item.data = item.data.dup
+        layout = item.data["layout"]
+        begin
           item.data.delete("layout")
-          item.render({}, @site.site_payload)
-          item.output
+
+          if item.is_a?(Jekyll::Document)          
+            output = Jekyll::Renderer.new(@site, item).run
+          else
+            item.render({}, @site.site_payload)
+            output = item.output  
+          end
+        ensure
+          # restore original layout
+          item.data["layout"] = layout
         end
+      
+        output
       end
 
       # render the item, parse the output and get all text inside <p> elements

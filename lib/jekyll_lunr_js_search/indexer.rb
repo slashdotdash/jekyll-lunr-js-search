@@ -65,7 +65,7 @@ module Jekyll
 
           entry.strip_index_suffix_from_url! if @strip_index_html
           entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
-          
+
           doc = {
             "id" => i,
             "title" => entry.title,
@@ -74,6 +74,7 @@ module Jekyll
             "categories" => entry.categories,
             "body" => entry.body
           }
+
           @index.add(doc)
           doc.delete("body")
           @docs[i] = doc
@@ -127,14 +128,9 @@ module Jekyll
       
       def pages_to_index(site)
         items = []
-        
-        # deep copy pages
+
+        # deep copy pages and documents (all collections, including posts)
         site.pages.each {|page| items << page.dup }
-        if defined?(site.posts.docs)
-          site.posts.docs.each {|post| items << post.dup }
-        else
-          site.posts.each {|post| items << post.dup }
-        end
         site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files 
