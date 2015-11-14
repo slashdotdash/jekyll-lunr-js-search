@@ -5,14 +5,16 @@ module Jekyll
     class SearchEntry
       def self.create(page_or_post, renderer)
         case page_or_post
-        when Jekyll::Post
-          date = page_or_post.date
-          categories = page_or_post.categories
         when Jekyll::Page, Jekyll::Document
           date = nil
           categories = []
         else 
-          raise 'Not supported'
+          if defined?(Jekyll::Post) and page_or_post.is_a?(Jekyll::Post)
+            date = page_or_post.date
+            categories = page_or_post.categories
+          else
+            raise 'Not supported'
+          end
         end
         title, url = extract_title_and_url(page_or_post)
         body = renderer.render(page_or_post)
