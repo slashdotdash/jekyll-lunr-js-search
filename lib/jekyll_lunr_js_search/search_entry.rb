@@ -6,7 +6,11 @@ module Jekyll
       def self.create(page_or_post, renderer)
         case page_or_post
         when Jekyll::Page, Jekyll::Document
-          date = nil
+          if defined?(page_or_post.date)
+            date = page_or_post.date
+          else
+            date = nil
+          end
           categories = []
         else 
           if defined?(Jekyll::Post) and page_or_post.is_a?(Jekyll::Post)
