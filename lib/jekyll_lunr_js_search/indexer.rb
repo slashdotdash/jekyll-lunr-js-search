@@ -134,7 +134,7 @@ module Jekyll
         site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files 
-        items.select! {|i| output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
+        items.select! {|i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
         items.reject! {|i| i.data['exclude_from_search'] } 
         
         items
