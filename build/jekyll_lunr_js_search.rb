@@ -91,7 +91,7 @@ module Jekyll
         }
 
         filepath = File.join(site.dest, filename)
-        File.open(filepath, "w") { |f| f.write(total.to_json(:max_nesting => 150)) }
+        File.open(filepath, "w") { |f| f.write(JSON.dump(total)) }
         Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
         added_files = [filename]
 
@@ -134,7 +134,7 @@ module Jekyll
         site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files 
-        items.select! {|i| output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
+        items.select! {|i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
         items.reject! {|i| i.data['exclude_from_search'] } 
         
         items
@@ -151,7 +151,7 @@ class V8::Object
   end
 
   def to_hash
-    JSON.parse(to_json, :max_nesting => 150)
+    JSON.parse(to_json, :max_nesting => false)
   end
 end
 require 'nokogiri'
@@ -200,7 +200,11 @@ module Jekyll
       def self.create(page_or_post, renderer)
         case page_or_post
         when Jekyll::Page, Jekyll::Document
-          date = nil
+          if defined?(page_or_post.date)
+            date = page_or_post.date
+          else
+            date = nil
+          end
           categories = []
         else 
           if defined?(Jekyll::Post) and page_or_post.is_a?(Jekyll::Post)
@@ -253,6 +257,6 @@ module Jekyll
 end
 module Jekyll
   module LunrJsSearch
-    VERSION = "3.0.0"
+    VERSION = "3.1.0"
   end
 end
