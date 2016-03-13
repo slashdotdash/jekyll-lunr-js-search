@@ -7,6 +7,6 @@ class V8::Object
   end
 
   def to_hash
-    JSON.parse(to_json, :max_nesting => 150)
+    JSON.parse(to_json, :max_nesting => false)
   end
 end
