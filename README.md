@@ -65,7 +65,7 @@ To use it, you must add a script reference to the bottom of your nominated searc
         <script src="/js/jquery.lunr.search.js" type="text/javascript" charset="utf-8"></script>
 
 Make sure you use the same version of lunr.js as the gem. The Jekyll log output includes the version used.
-    
+
 Ideally you would concatenate, minify and optimise these six `.js` files using uglify/Google closure/etc to produce a single `search.min.js` file to reference (or use the pre-built script as described in 2a above).
 
     <script src="/js/search.min.js" type="text/javascript" charset="utf-8"></script>
@@ -78,7 +78,7 @@ Ideally you would concatenate, minify and optimise these six `.js` files using u
       </form>
     </div>
 
-Search happens as you type, once at least three characters have been entered. 
+Search happens as you type, once at least three characters have been entered.
 
 Providing the form action and specifying the get method allows the user to hit return/enter to also submit the search.
 Amend the form's action URL as necessary for the search page on your own site.
@@ -134,13 +134,14 @@ URL of the Jekyll page or post that can be used to create a hyperlink `<a href="
           results : '#search-results',  // selector for containing search results element
           entries : '.entries',         // selector for search entries containing element (contained within results above)
           template: '#search-results-template'  // selector for Mustache.js template
+          emptyMsg: 'Nothing found.'    // String return if no entries found (optional)
         });
       });
     </script>
 
 ### 8. To exclude pages from the search index.
 
-Add the following `exclude_from_search` setting to any page's YAML config. 
+Add the following `exclude_from_search` setting to any page's YAML config.
 
     exclude_from_search: true
 
