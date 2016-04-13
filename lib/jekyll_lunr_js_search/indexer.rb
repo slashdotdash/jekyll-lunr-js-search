@@ -9,6 +9,7 @@ module Jekyll
     class Indexer < Jekyll::Generator
       def initialize(config = {})
         super(config)
+        return if ARGV.include?("--no-lunr-index")
         
         lunr_config = { 
           'excludes' => [],
@@ -52,6 +53,10 @@ module Jekyll
       # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
       # The main content from each page is extracted and saved to disk as json
       def generate(site)
+        if @index.nil?
+          Jekyll.logger.info "Lunr:", 'Skipping search indexing at user request'
+          return
+        end
         Jekyll.logger.info "Lunr:", 'Creating search index...'
 
         @site = site

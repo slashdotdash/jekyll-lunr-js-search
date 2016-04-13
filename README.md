@@ -167,6 +167,10 @@ You can choose to store `index.json`, `search.min.js` and `lunr.min.js` in a dif
     lunr_search:
       js_dir: "javascript"
 
+### 11. Build your site without indexing
+
+Sometimes you want a quick build of your site. If you want to exclude the indexing (which can take some time) you can run `jekyll build -- --no-lunr-index`. Note the additional `--`.
+
 ## Demo
 
 Search plugin is deployed to [10consulting.com/search](http://10consulting.com/search/).
