@@ -139,7 +139,8 @@ Booelan value, true if current result element is a post. Can be used to toggle d
           results   : '#search-results',          // selector for containing search results element
           template  : '#search-results-template', // selector for Mustache.js template
           titleMsg  : '<h1>Search results<h1>',   // message attached in front of results (can be empty)
-          emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
+          emptyMsg  : '<p>Nothing found.</p>',    // shown message if search returns no results
+          limit     : 0                           // maximum amount of results shown (0 represents all)
         });
       });
     </script>
