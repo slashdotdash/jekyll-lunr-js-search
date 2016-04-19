@@ -72,11 +72,9 @@ Ideally you would concatenate, minify and optimise these six `.js` files using u
 
 ### 4. Add a search form with a query input as shown.
 
-    <div id="search">
-      <form action="/search" method="get">
-        <input type="text" id="search-query" name="q" placeholder="Search" autocomplete="off">
-      </form>
-    </div>
+    <form action="/search" method="get">
+      <input type="text" id="search-query" name="q" placeholder="Search" autocomplete="off">
+    </form>
 
 Search happens as you type, once at least three characters have been entered.
 
@@ -85,11 +83,7 @@ Amend the form's action URL as necessary for the search page on your own site.
 
 ### 5. Add an element to contain the list of search result entries.
 
-    <section id="search-results" style="display: none;">
-      <p>Search results</p>
-      <div class="entries">
-      </div>
-    </section>
+    <section id="search-results" style="display: none;"> </section>
 
 This may be initially hidden as the plugin will show the element when searching.
 
@@ -141,11 +135,11 @@ Booelan value, true if current result element is a post. Can be used to toggle d
     <script type="text/javascript">
       $(function() {
         $('#search-query').lunrSearch({
-          indexUrl: '/js/index.json',   // Url for the .json file containing search index data
-          results : '#search-results',  // selector for containing search results element
-          entries : '.entries',         // selector for search entries containing element (contained within results above)
-          template: '#search-results-template',  // selector for Mustache.js template
-          emptyMsg: 'Nothing found.'    // String return if no entries found (optional)
+          indexUrl  : '/js/index.json',           // url for the .json file containing search index data
+          results   : '#search-results',          // selector for containing search results element
+          template  : '#search-results-template', // selector for Mustache.js template
+          titleMsg  : '<h1>Search results<h1>',   // message attached in front of results (can be empty)
+          emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
         });
       });
     </script>
