@@ -103,6 +103,12 @@ This may be initially hidden as the plugin will show the element when searching.
             {{#date}}<small><time datetime="{{pubdate}}" pubdate>{{displaydate}}</time></small>{{/date}}
             <a href="{{url}}">{{title}}</a>
           </h3>
+          <p>
+            {{#categories}}{{.}} {{/categories}}
+          </p>
+          <p>
+            {{#tags}}{{.}}{{/tags}}
+          </p>
         </article>
       {{/entries}}
     </script>
@@ -124,6 +130,10 @@ Post published date, formatted as 'mmm dd, yyyy', such as Oct 12, 2012 (posts on
 Title of the Jekyll page or post.
 #### url
 URL of the Jekyll page or post that can be used to create a hyperlink `<a href="{{url}}">{{title}}</a>`.
+#### categories
+Categories (array) of the Jekyll page or post, can be used in a loop `{{#categories}}{{.}} {{/categories}}` to list them.
+#### tags
+Tags (array) of the Jekyll page or post, can be used in a loop `{{#tags}}{{.}} {{/tags}}` to list them.
 
 ### 7. Configure the jQuery plugin for the search input field.
 
@@ -133,7 +143,7 @@ URL of the Jekyll page or post that can be used to create a hyperlink `<a href="
           indexUrl: '/js/index.json',   // Url for the .json file containing search index data
           results : '#search-results',  // selector for containing search results element
           entries : '.entries',         // selector for search entries containing element (contained within results above)
-          template: '#search-results-template'  // selector for Mustache.js template
+          template: '#search-results-template',  // selector for Mustache.js template
           emptyMsg: 'Nothing found.'    // String return if no entries found (optional)
         });
       });
