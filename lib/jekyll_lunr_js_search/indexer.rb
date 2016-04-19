@@ -11,7 +11,6 @@ module Jekyll
         super(config)
 
         lunr_config = {
-          'excludes' => [],
           'strip_index_html' => false,
           'min_length' => 3,
           'stopwords' => 'stopwords.txt',
@@ -40,7 +39,23 @@ module Jekyll
         @index = ctx.eval('lunr(indexer)')
         @lunr_version = ctx.eval('lunr.version')
         @docs = {}
-        @excludes = lunr_config['excludes']
+
+        @excludes = {
+          'files' => [],
+          'categories' => [],
+          'tags' => []
+        }
+        if lunr_config.key?('excludes')
+          Jekyll.logger.debug "Lunr:", "TEST: contains excludes key"
+          if lunr_config['excludes'].is_a?(Hash)
+            Jekyll.logger.debug "Lunr:", "TEST: is hash"
+            @excludes.merge!(lunr_config['excludes'] || {})
+          else
+            Jekyll.logger.debug "Lunr:", "TEST: is array"
+            @excludes['files'] = lunr_config['excludes']
+          end
+        end
+        Jekyll.logger.debug "Lunr:", "TEST: #{@excludes}"
 
         # if web host supports index.html as default doc, then optionally exclude it from the url
         @strip_index_html = lunr_config['strip_index_html']
@@ -137,8 +152,10 @@ module Jekyll
         site.documents.each {|document| items << document.dup }
 
         # only process files that will be converted to .html and only non excluded files
-        items.select! {|i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
-        items.reject! {|i| i.data['exclude_from_search'] }
+        items.select! { |i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes['files'].any?{|s| (i.url =~ Regexp.new(s)) != nil } }
+        items.reject! { |i| i.data['exclude_from_search'] }
+        items.reject! { |i| !(@excludes['categories'] & i.data['categories']).empty? }
+        items.reject! { |i| !(@excludes['tags'] & i.data['tags']).empty? }
 
         items
       end

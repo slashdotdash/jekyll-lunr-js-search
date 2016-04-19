@@ -150,10 +150,13 @@ Add the following `exclude_from_search` setting to any page's YAML config.
 
     exclude_from_search: true
 
-Or add an array of exclusions (as individual regular expressions) to the site's `_config.yml` file.
+Or add an array of exclusions (as individual regular expressions), categories or tags to the site's `_config.yml` file.
 
     lunr_search:
-      excludes: [rss.xml, atom.xml]
+      excludes:
+        files:      [rss.xml, atom.xml]
+        categories: []
+        tags:       []
 
 ### 9. Stop Words
 
