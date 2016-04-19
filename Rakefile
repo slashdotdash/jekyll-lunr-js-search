@@ -49,12 +49,19 @@ task :concat_js do
       data << File.read(file)
     })
   end
-  
+
   # Lunr is stored separately so we can use it for index generation
   FileUtils.cp('bower_components/lunr.js/lunr.min.js', 'build/lunr.min.js')
 end
 
 task :minify_js do
+  minified, map = Uglifier.new.compile(File.read('build/search.js'))
+  File.open('build/search.min.js', 'w') do |file|
+    file.puts minified
+  end
+end
+
+task :minify_js_map do
   minified, map = Uglifier.new.compile_with_map(File.read('build/search.js'))
   File.open('build/search.js.map', 'w') { |file| file.write(map) }
   File.open('build/search.min.js', 'w') do |file|
