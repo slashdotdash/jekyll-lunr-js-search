@@ -9,8 +9,8 @@ module Jekyll
     class Indexer < Jekyll::Generator
       def initialize(config = {})
         super(config)
-        
-        lunr_config = { 
+
+        lunr_config = {
           'excludes' => [],
           'strip_index_html' => false,
           'min_length' => 3,
@@ -40,8 +40,8 @@ module Jekyll
         @lunr_version = ctx.eval('lunr.version')
         @docs = {}
         @excludes = lunr_config['excludes']
-        
-        # if web host supports index.html as default doc, then optionally exclude it from the url 
+
+        # if web host supports index.html as default doc, then optionally exclude it from the url
         @strip_index_html = lunr_config['strip_index_html']
 
         # stop word exclusion configuration
@@ -64,7 +64,7 @@ module Jekyll
           entry = SearchEntry.create(item, content_renderer)
 
           entry.strip_index_suffix_from_url! if @strip_index_html
-          entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file) 
+          entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file)
 
           doc = {
             "id" => i,
@@ -72,19 +72,20 @@ module Jekyll
             "url" => entry.url,
             "date" => entry.date,
             "categories" => entry.categories,
+            "tags" => entry.tags,
             "body" => entry.body
           }
 
           @index.add(doc)
           doc.delete("body")
           @docs[i] = doc
-          
+
           Jekyll.logger.debug "Lunr:", (entry.title ? "#{entry.title} (#{entry.url})" : entry.url)
         end
-        
+
         FileUtils.mkdir_p(File.join(site.dest, @js_dir))
         filename = File.join(@js_dir, 'index.json')
-        
+
         total = {
           "docs" => @docs,
           "index" => @index.to_hash
@@ -112,7 +113,7 @@ module Jekyll
       end
 
       private
-      
+
       # load the stopwords file
       def stopwords
         @stopwords ||= IO.readlines(@stopwords_file).map { |l| l.strip }
@@ -125,7 +126,7 @@ module Jekyll
           doc.output_ext
         end
       end
-      
+
       def pages_to_index(site)
         items = []
 
@@ -133,10 +134,10 @@ module Jekyll
         site.pages.each {|page| items << page.dup }
         site.documents.each {|document| items << document.dup }
 
-        # only process files that will be converted to .html and only non excluded files 
+        # only process files that will be converted to .html and only non excluded files
         items.select! {|i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes.any? {|s| (i.url =~ Regexp.new(s)) != nil } }
-        items.reject! {|i| i.data['exclude_from_search'] } 
-        
+        items.reject! {|i| i.data['exclude_from_search'] }
+
         items
       end
     end
