@@ -103,12 +103,11 @@ This may be initially hidden as the plugin will show the element when searching.
             {{#date}}<small><time datetime="{{pubdate}}" pubdate>{{displaydate}}</time></small>{{/date}}
             <a href="{{url}}">{{title}}</a>
           </h3>
-          <p>
-            {{#categories}}{{.}} {{/categories}}
-          </p>
-          <p>
-            {{#tags}}{{.}}{{/tags}}
-          </p>
+          {{#is_post}}
+          <ul>
+            {{#tags}}<li>{{.}} </li>{{/tags}}
+          </ul>
+          {{/is_post}}
         </article>
       {{/entries}}
     </script>
@@ -134,6 +133,8 @@ URL of the Jekyll page or post that can be used to create a hyperlink `<a href="
 Categories (array) of the Jekyll page or post, can be used in a loop `{{#categories}}{{.}} {{/categories}}` to list them.
 #### tags
 Tags (array) of the Jekyll page or post, can be used in a loop `{{#tags}}{{.}} {{/tags}}` to list them.
+#### is_post
+Booelan value, true if current result element is a post. Can be used to toggle display of specific elements in the template `{{#is_post}}is a post{{/is_post}}`
 
 ### 7. Configure the jQuery plugin for the search input field.
 

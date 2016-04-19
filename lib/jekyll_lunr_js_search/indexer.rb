@@ -17,6 +17,7 @@ module Jekyll
           'stopwords' => 'stopwords.txt',
           'fields' => {
             'title' => 10,
+            'categories' => 20,
             'tags' => 20,
             'body' => 1
           },
@@ -73,6 +74,7 @@ module Jekyll
             "date" => entry.date,
             "categories" => entry.categories,
             "tags" => entry.tags,
+            "is_post" => entry.is_post,
             "body" => entry.body
           }
 

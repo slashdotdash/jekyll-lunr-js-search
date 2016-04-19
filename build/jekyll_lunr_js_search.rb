@@ -17,6 +17,7 @@ module Jekyll
           'stopwords' => 'stopwords.txt',
           'fields' => {
             'title' => 10,
+            'categories' => 20,
             'tags' => 20,
             'body' => 1
           },
@@ -73,6 +74,7 @@ module Jekyll
             "date" => entry.date,
             "categories" => entry.categories,
             "tags" => entry.tags,
+            "is_post" => entry.is_post,
             "body" => entry.body
           }
 
@@ -163,24 +165,24 @@ module Jekyll
       def initialize(site)
         @site = site
       end
-
+      
       # render item, but without using its layout
       def prepare(item)
         layout = item.data["layout"]
         begin
           item.data.delete("layout")
 
-          if item.is_a?(Jekyll::Document)
+          if item.is_a?(Jekyll::Document)          
             output = Jekyll::Renderer.new(@site, item).run
           else
             item.render({}, @site.site_payload)
-            output = item.output
+            output = item.output  
           end
         ensure
           # restore original layout
           item.data["layout"] = layout
         end
-
+      
         output
       end
 
@@ -191,7 +193,7 @@ module Jekyll
         Nokogiri::HTML(prepare(layoutless)).text
       end
     end
-  end
+  end  
 end
 require 'nokogiri'
 
@@ -208,9 +210,10 @@ module Jekyll
           categories = site.data['categories']
           tags = site.data['tags']
           title, url = extract_title_and_url(site)
+          is_post = site.is_a?(Jekyll::Document)
           body = renderer.render(site)
 
-          SearchEntry.new(title, url, date, categories, tags, body, renderer)
+          SearchEntry.new(title, url, date, categories, tags, is_post, body, renderer)
         else
           raise 'Not supported'
         end
@@ -221,10 +224,10 @@ module Jekyll
         [ data['title'], data['url'] ]
       end
 
-      attr_reader :title, :url, :date, :categories, :tags, :body, :collection
+      attr_reader :title, :url, :date, :categories, :tags, :is_post, :body, :collection
 
-      def initialize(title, url, date, categories, tags, body, collection)
-        @title, @url, @date, @categories, @tags, @body, @collection = title, url, date, categories, tags, body, collection
+      def initialize(title, url, date, categories, tags, is_post, body, collection)
+        @title, @url, @date, @categories, @tags, @is_post, @body, @collection = title, url, date, categories, tags, is_post, body, collection
       end
 
       def strip_index_suffix_from_url!
@@ -242,9 +245,9 @@ module Jekyll
   end
 end
 module Jekyll
-  module LunrJsSearch
+  module LunrJsSearch  
     class SearchIndexFile < Jekyll::StaticFile
-      # Override write as the index.json index file has already been created
+      # Override write as the index.json index file has already been created 
       def write(dest)
         true
       end

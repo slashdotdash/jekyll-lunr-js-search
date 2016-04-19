@@ -13,9 +13,10 @@ module Jekyll
           categories = site.data['categories']
           tags = site.data['tags']
           title, url = extract_title_and_url(site)
+          is_post = site.is_a?(Jekyll::Document)
           body = renderer.render(site)
 
-          SearchEntry.new(title, url, date, categories, tags, body, renderer)
+          SearchEntry.new(title, url, date, categories, tags, is_post, body, renderer)
         else
           raise 'Not supported'
         end
@@ -26,10 +27,10 @@ module Jekyll
         [ data['title'], data['url'] ]
       end
 
-      attr_reader :title, :url, :date, :categories, :tags, :body, :collection
+      attr_reader :title, :url, :date, :categories, :tags, :is_post, :body, :collection
 
-      def initialize(title, url, date, categories, tags, body, collection)
-        @title, @url, @date, @categories, @tags, @body, @collection = title, url, date, categories, tags, body, collection
+      def initialize(title, url, date, categories, tags, is_post, body, collection)
+        @title, @url, @date, @categories, @tags, @is_post, @body, @collection = title, url, date, categories, tags, is_post, body, collection
       end
 
       def strip_index_suffix_from_url!
