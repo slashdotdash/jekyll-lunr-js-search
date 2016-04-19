@@ -12028,10 +12028,10 @@ var lunr=function(t){var e=new lunr.Index;return e.pipeline.add(lunr.stopWordFil
       $results.empty();
 
       if (entries.length === 0) {
-        $results.append('<p>'+ this.emptyMsg +'</p>');
+        $results.append( this.emptyMsg );
       } else {
-        if (!this.titleMsg || 0 === this.titleMsg.length) {
-          $results.append('<p>'+ this.titleMsg +'</p>');
+        if (this.titleMsg && 0 !== this.titleMsg.length) {
+          $results.append( this.titleMsg );
         }
         $results.append(this.template({entries: entries}));
       }
@@ -12064,10 +12064,10 @@ var lunr=function(t){var e=new lunr.Index;return e.pipeline.add(lunr.stopWordFil
   };
 
   $.fn.lunrSearch.defaults = {
-    indexUrl  : '/js/index.json',   // Url for the .json file containing search index data
-    results   : '#search-results',  // selector for containing search results element
-    template  : '#search-results-template',  // selector for Mustache.js template
-    titleMsg     : 'Search results',   // Message attached in front of results
-    emptyMsg  : 'Nothing found.'    // shown message if search returns no results
+    indexUrl  : '/js/index.json',           // url for the .json file containing search index data
+    results   : '#search-results',          // selector for containing search results element
+    template  : '#search-results-template', // selector for Mustache.js template
+    titleMsg  : '<h1>Search results<h1>',   // message attached in front of results
+    emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
   };
 })(jQuery);
