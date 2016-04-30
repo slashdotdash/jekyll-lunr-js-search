@@ -150,8 +150,8 @@ module Jekyll
         # only process files that will be converted to .html and only non excluded files
         items.select! { |i| i.respond_to?(:output_ext) && output_ext(i) == '.html' && ! @excludes['files'].any?{|s| (i.url =~ Regexp.new(s)) != nil } }
         items.reject! { |i| i.data['exclude_from_search'] }
-        items.reject! { |i| !(@excludes['categories'] & i.data['categories']).empty? }
-        items.reject! { |i| !(@excludes['tags'] & i.data['tags']).empty? }
+        items.reject! { |i| !i.data['categories'].nil? && !(@excludes['categories'] & i.data['categories']).empty? }
+        items.reject! { |i| !i.data['tags'].nil? && !(@excludes['tags'] & i.data['tags']).empty? }
 
         items
       end
