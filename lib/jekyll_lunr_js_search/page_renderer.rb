@@ -11,7 +11,7 @@ module Jekyll
       def prepare(item)
         layout = item.data["layout"]
         begin
-          item.data.delete("layout")
+          item.data["layout"] = nil
 
           if item.is_a?(Jekyll::Document)          
             output = Jekyll::Renderer.new(@site, item).run
