@@ -30,6 +30,7 @@
       this.template = this.compileTemplate($(options.template));
       this.titleMsg = options.titleMsg;
       this.emptyMsg = options.emptyMsg;
+      this.limit = options.limit;
 
       this.initialize();
     }
@@ -106,6 +107,10 @@
           return $.grep(entries, function(entry) { return entry.id === parseInt(result.ref, 10); })[0];
         });
 
+        if (this.limit > 0) {
+          results = results.slice(0, this.limit);
+        }
+
         this.displayResults(results);
       }
     };
@@ -156,6 +161,7 @@
     results   : '#search-results',          // selector for containing search results element
     template  : '#search-results-template', // selector for Mustache.js template
     titleMsg  : '<h1>Search results<h1>',   // message attached in front of results
-    emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
+    emptyMsg  : '<p>Nothing found.</p>',    // shown message if search returns no results
+    limit     : 0                           // maximum amount of results shown (0 represents all)
   };
 })(jQuery);

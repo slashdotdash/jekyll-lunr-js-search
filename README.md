@@ -139,7 +139,8 @@ Booelan value, true if current result element is a post. Can be used to toggle d
           results   : '#search-results',          // selector for containing search results element
           template  : '#search-results-template', // selector for Mustache.js template
           titleMsg  : '<h1>Search results<h1>',   // message attached in front of results (can be empty)
-          emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
+          emptyMsg  : '<p>Nothing found.</p>',    // shown message if search returns no results
+          limit     : 0                           // maximum amount of results shown (0 represents all)
         });
       });
     </script>
@@ -150,10 +151,13 @@ Add the following `exclude_from_search` setting to any page's YAML config.
 
     exclude_from_search: true
 
-Or add an array of exclusions (as individual regular expressions) to the site's `_config.yml` file.
+Or add an array of exclusions (as individual regular expressions), categories or tags to the site's `_config.yml` file.
 
     lunr_search:
-      excludes: [rss.xml, atom.xml]
+      excludes:
+        files:      [rss.xml, atom.xml]
+        categories: []
+        tags:       []
 
 ### 9. Stop Words
 
