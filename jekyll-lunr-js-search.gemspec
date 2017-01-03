@@ -13,11 +13,11 @@ Gem::Specification.new do |s|
   s.files         = Dir.glob("lib/**/*.rb") + Dir.glob("build/*.min.js")
   s.homepage      = 'https://github.com/slashdotdash/jekyll-lunr-js-search'
   s.require_paths = ['lib']
-  
-  s.add_runtime_dependency 'nokogiri', '~> 1.6'
-  s.add_runtime_dependency 'json', '~> 1.8'
+
+  s.add_runtime_dependency 'nokogiri', '~> 1.7'
+  s.add_runtime_dependency 'json', '~> 2.0'
   s.add_runtime_dependency 'therubyracer', '~> 0.12'
 
-  s.add_development_dependency 'rake', '~> 10.3'
-  s.add_development_dependency 'uglifier', '~> 2.5'
+  s.add_development_dependency 'rake', '~> 12.0'
+  s.add_development_dependency 'uglifier', '~> 3.0'
 end
