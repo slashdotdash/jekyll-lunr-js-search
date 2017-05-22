@@ -25,21 +25,24 @@ module Jekyll
         }.merge!(config['lunr_search'] || {})
 
         @js_dir = lunr_config['js_dir']
-        gem_lunr = File.join(File.dirname(__FILE__), "../../build/lunr.min.js")
+        gem_lunr = File.join(File.dirname(__FILE__), '../../build/lunr.js')
         @lunr_path = File.exist?(gem_lunr) ? gem_lunr : File.join(@js_dir, File.basename(gem_lunr))
         raise "Could not find #{@lunr_path}" if !File.exist?(@lunr_path)
 
+        Jekyll.logger.debug 'Lunr:', 'Initializing lunr engine in V8'
         ctx = V8::Context.new
         ctx.load(@lunr_path)
-        ctx['indexer'] = proc do |this|
-          this.ref('id')
-          lunr_config['fields'].each_pair do |name, boost|
-            this.field(name, { 'boost' => boost })
-          end
+        @js_lunr = ctx.eval('jsLunr = lunr')
+        @js_lunr_builder = ctx.eval('jsLunr_builder = new lunr.Builder;')
+        Jekyll.logger.debug 'Lunr:', @js_lunr.version
+        @js_lunr_builder.pipeline.add(@js_lunr['trimmer'], @js_lunr['stopWordFilter'], @js_lunr['stemmer'])
+        @js_lunr_builder.searchPipeline.add(@js_lunr['stemmer'])
+
+        lunr_config['fields'].each_pair do |name, boost|
+          @js_lunr_builder.field(name, { 'boost' => boost })
         end
-        @index = ctx.eval('lunr(indexer)')
-        @lunr_version = ctx.eval('lunr.version')
-        @docs = {}
+
+        Jekyll.logger.debug 'Lunr:', 'Initialized lunr engine in V8'
         @excludes = lunr_config['excludes']
 
         # if web host supports index.html as default doc, then optionally exclude it from the url
@@ -59,7 +62,7 @@ module Jekyll
         # gather pages and posts
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
-        index = []
+        docs = {}
 
         items.each_with_index do |item, i|
           entry = SearchEntry.create(item, content_renderer)
@@ -78,9 +81,9 @@ module Jekyll
             "body" => entry.body
           }
 
-          @index.add(doc)
+          @js_lunr_builder.add(doc)
           doc.delete("body")
-          @docs[i] = doc
+          docs[i] = doc
 
           Jekyll.logger.debug "Lunr:", (entry.title ? "#{entry.title} (#{entry.url})" : entry.url)
         end
@@ -88,14 +91,18 @@ module Jekyll
         FileUtils.mkdir_p(File.join(site.dest, @js_dir))
         filename = File.join(@js_dir, 'index.json')
 
+        Jekyll.logger.debug 'Lunr:', "created file #{filename}"
+
+        js_index = @js_lunr_builder.build().toJSON()
+
         total = {
-          "docs" => @docs,
-          "index" => @index.to_hash
+          "docs" => docs,
+          "index" => js_index.to_hash
         }
 
         filepath = File.join(site.dest, filename)
         File.open(filepath, "w") { |f| f.write(JSON.dump(total)) }
-        Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@lunr_version})"
+        Jekyll.logger.info "Lunr:", "Index ready (lunr.js v#{@js_lunr.version})"
         added_files = [filename]
 
         site_js = File.join(site.dest, @js_dir)
@@ -170,7 +177,7 @@ module Jekyll
       def prepare(item)
         layout = item.data["layout"]
         begin
-          item.data.delete("layout")
+          item.data["layout"] = nil
 
           if item.is_a?(Jekyll::Document)          
             output = Jekyll::Renderer.new(@site, item).run
