@@ -88,6 +88,7 @@ module Jekyll
           @index_field_names.each do |fieldname|
             index_doc[fieldname] = entry.get_by_name(fieldname)
           end
+          Jekyll.logger.info(index_doc.to_json)
 
           @js_lunr_builder.add(index_doc)
 
@@ -95,8 +96,9 @@ module Jekyll
               'id' => i,
           }
           @template_field_names.each do |fieldname|
-            template_docs[fieldname] = entry.get_by_name(fieldname)
+            template_doc[fieldname] = entry.get_by_name(fieldname)
           end
+          Jekyll.logger.info(template_doc.to_json)
 
           template_docs[i] = template_doc
 
