@@ -3,6 +3,7 @@ require 'net/http'
 require 'json'
 require 'uri'
 require 'v8'
+require 'set'
 
 module Jekyll
   module LunrJsSearch
@@ -21,6 +22,9 @@ module Jekyll
             'tags' => 20,
             'body' => 1
           },
+          'template_fields' => [
+              'title', 'url', 'date', 'categories', 'tags', 'is_post'
+          ],
           'js_dir' => 'js'
         }.merge!(config['lunr_search'] || {})
 
@@ -38,11 +42,17 @@ module Jekyll
         @js_lunr_builder.pipeline.add(@js_lunr['trimmer'], @js_lunr['stopWordFilter'], @js_lunr['stemmer'])
         @js_lunr_builder.searchPipeline.add(@js_lunr['stemmer'])
 
+        built_in_field_names = ['title', 'url', 'date', 'is_post', 'body'] # see SearchEntry
+        @template_field_names = lunr_config['template_fields'].to_set
+        @index_field_names = [].to_set
+
         lunr_config['fields'].each_pair do |name, boost|
           @js_lunr_builder.field(name, { 'boost' => boost })
+          @index_field_names.add(name)
         end
 
-        Jekyll.logger.debug 'Lunr:', 'Initialized lunr engine in V8'
+        @data_field_names = @index_field_names.merge(@template_field_names).subtract(built_in_field_names)
+
         @excludes = lunr_config['excludes']
 
         # if web host supports index.html as default doc, then optionally exclude it from the url
@@ -51,6 +61,8 @@ module Jekyll
         # stop word exclusion configuration
         @min_length = lunr_config['min_length']
         @stopwords_file = lunr_config['stopwords']
+
+        Jekyll.logger.debug 'Lunr:', 'Initialized lunr engine in V8'
       end
 
       # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -62,28 +74,31 @@ module Jekyll
         # gather pages and posts
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
-        docs = {}
+        template_docs = {}
 
         items.each_with_index do |item, i|
-          entry = SearchEntry.create(item, content_renderer)
+          entry = SearchEntry.create(item, content_renderer, @data_field_names)
 
           entry.strip_index_suffix_from_url! if @strip_index_html
           entry.strip_stopwords!(stopwords, @min_length) if File.exists?(@stopwords_file)
 
-          doc = {
-            "id" => i,
-            "title" => entry.title,
-            "url" => entry.url,
-            "date" => entry.date,
-            "categories" => entry.categories,
-            "tags" => entry.tags,
-            "is_post" => entry.is_post,
-            "body" => entry.body
+          index_doc = {
+            'id' => i,
           }
+          @index_field_names.each do |fieldname|
+            index_doc[fieldname] = entry.get_by_name(fieldname)
+          end
 
-          @js_lunr_builder.add(doc)
-          doc.delete("body")
-          docs[i] = doc
+          @js_lunr_builder.add(index_doc)
+
+          template_doc = {
+              'id' => i,
+          }
+          @template_field_names.each do |fieldname|
+            template_docs[fieldname] = entry.get_by_name(fieldname)
+          end
+
+          template_docs[i] = template_doc
 
           Jekyll.logger.debug "Lunr:", (entry.title ? "#{entry.title} (#{entry.url})" : entry.url)
         end
@@ -96,7 +111,7 @@ module Jekyll
         js_index = @js_lunr_builder.build().toJSON()
 
         total = {
-          "docs" => docs,
+          "docs" => template_docs,
           "index" => js_index.to_hash
         }
 
