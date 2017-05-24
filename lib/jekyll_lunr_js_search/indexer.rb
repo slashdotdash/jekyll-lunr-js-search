@@ -51,7 +51,7 @@ module Jekyll
           @index_field_names.add(name)
         end
 
-        @data_field_names = @index_field_names.merge(@template_field_names).subtract(built_in_field_names)
+        @data_field_names = @index_field_names.clone.merge(@template_field_names).subtract(built_in_field_names)
 
         @excludes = lunr_config['excludes']
 
@@ -88,7 +88,6 @@ module Jekyll
           @index_field_names.each do |fieldname|
             index_doc[fieldname] = entry.get_by_name(fieldname)
           end
-          Jekyll.logger.info(index_doc.to_json)
 
           @js_lunr_builder.add(index_doc)
 
@@ -98,7 +97,6 @@ module Jekyll
           @template_field_names.each do |fieldname|
             template_doc[fieldname] = entry.get_by_name(fieldname)
           end
-          Jekyll.logger.info(template_doc.to_json)
 
           template_docs[i] = template_doc
 

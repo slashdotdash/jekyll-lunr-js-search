@@ -13,7 +13,7 @@ module Jekyll
 
           datafields = {}
           data_field_names.each do |fieldname|
-            datafields[fieldname] = site.data.has_key? fieldname ? site.data[fieldname] : nil
+            datafields[fieldname] = site.data[fieldname]
           end
 
           title, url = extract_title_and_url(site)

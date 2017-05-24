@@ -51,7 +51,7 @@ module Jekyll
           @index_field_names.add(name)
         end
 
-        @data_field_names = @index_field_names.merge(@template_field_names).subtract(built_in_field_names)
+        @data_field_names = @index_field_names.clone.merge(@template_field_names).subtract(built_in_field_names)
 
         @excludes = lunr_config['excludes']
 
@@ -91,12 +91,11 @@ module Jekyll
 
           @js_lunr_builder.add(index_doc)
 
-          # re-assign with completely new data structure
           template_doc = {
               'id' => i,
           }
           @template_field_names.each do |fieldname|
-            template_docs[fieldname] = entry.get_by_name(fieldname)
+            template_doc[fieldname] = entry.get_by_name(fieldname)
           end
 
           template_docs[i] = template_doc
@@ -233,7 +232,7 @@ module Jekyll
 
           datafields = {}
           data_field_names.each do |fieldname|
-            datafields[fieldname] = site.data.has_key? fieldname ? site.data[fieldname] : nil
+            datafields[fieldname] = site.data[fieldname]
           end
 
           title, url = extract_title_and_url(site)
