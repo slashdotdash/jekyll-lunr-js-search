@@ -174,18 +174,20 @@ You can choose to store `index.json`, `search.min.js` and `lunr.min.js` in a dif
 
 ## 11. Indexed Fields and Field Boost
  
-To customize which fields are indexed with what weight the "fields" map can be overridden,
-e.g. to also make custom front matter fields searchable. 
-The defaults are:
+To customize which fields are indexed the "fields" map can be overridden,
+e.g. to also make custom front matter fields searchable. The defaults are:
 
     lunr_search: 
       fields:
-        title: 10
-        categories: 20
-        tags: 20
-        body: 1
+        - title
+        - categories
+        - tags
+        - body
         
 `title`, `date`, `url`, `is_post` and the `body` are special names for Jekyll built-ins. 
+Since lunr.js 2.1 the index has per-field data, so all fields influence the results
+at comparable weight independently of the text length in the field. Boosting is therefore less
+necessary but can still be done at query time (but not at index time). 
 
 ## 12. Stored Document Data for use in the Template
 

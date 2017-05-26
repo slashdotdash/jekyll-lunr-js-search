@@ -16,12 +16,9 @@ module Jekyll
           'strip_index_html' => false,
           'min_length' => 3,
           'stopwords' => 'stopwords.txt',
-          'fields' => {
-            'title' => 10,
-            'categories' => 20,
-            'tags' => 20,
-            'body' => 1
-          },
+          'fields' => [
+              'title', 'categories', 'tags', 'body'
+          ],
           'template_fields' => [
               'title', 'url', 'date', 'categories', 'tags', 'is_post'
           ],
@@ -42,21 +39,17 @@ module Jekyll
         @js_lunr_builder.pipeline.add(@js_lunr['trimmer'], @js_lunr['stopWordFilter'], @js_lunr['stemmer'])
         @js_lunr_builder.searchPipeline.add(@js_lunr['stemmer'])
 
-        built_in_field_names = ['title', 'url', 'date', 'is_post', 'body'] # see SearchEntry
+        built_in_field_names = ['title', 'url', 'date', 'is_post', 'body'].to_set # see SearchEntry
         @template_field_names = lunr_config['template_fields'].to_set
-        @index_field_names = [].to_set
-
-        lunr_config['fields'].each_pair do |name, boost|
-          @js_lunr_builder.field(name, { 'boost' => boost })
-          @index_field_names.add(name)
+        @index_field_names =  lunr_config['fields'].to_set
+        @index_field_names.each do |name|
+          @js_lunr_builder.field(name)
         end
-
         @data_field_names = @index_field_names.clone.merge(@template_field_names).subtract(built_in_field_names)
 
         @excludes = lunr_config['excludes']
 
         # if web host supports index.html as default doc, then optionally exclude it from the url
-        @strip_index_html = lunr_config['strip_index_html']
 
         # stop word exclusion configuration
         @min_length = lunr_config['min_length']
