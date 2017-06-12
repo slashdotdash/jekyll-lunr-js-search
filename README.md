@@ -172,10 +172,12 @@ You can choose to store `index.json`, `search.min.js` and `lunr.min.js` in a dif
     lunr_search:
       js_dir: "javascript"
 
-## 11. Indexed Fields and Field Boost
+## 11. Indexed Fields
  
 To customize which fields are indexed the "fields" map can be overridden,
-e.g. to also make custom front matter fields searchable. The defaults are:
+e.g. to also make custom front matter fields searchable. The choice of fields has strong influence on the
+search results since lunr 2.1.
+The defaults are:
 
     lunr_search: 
       fields:
