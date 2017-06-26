@@ -1,5 +1,5 @@
 /**
- * lunr - http://lunrjs.com - A bit like Solr, but much smaller and not as bright - 2.1.0-alpha1
+ * lunr - http://lunrjs.com - A bit like Solr, but much smaller and not as bright - 2.1.0
  * Copyright (C) 2017 Oliver Nightingale
  * @license MIT
  */
@@ -54,7 +54,7 @@ var lunr = function (config) {
   return builder.build()
 }
 
-lunr.version = "2.1.0-alpha1"
+lunr.version = "2.1.0"
 /*!
  * lunr.utils
  * Copyright (C) 2017 Oliver Nightingale
@@ -1688,6 +1688,10 @@ lunr.Index = function (attrs) {
  * to provide fuzzy matching, e.g. 'hello~2' will match documents with hello with an edit distance of 2.
  * Avoid large values for edit distance to improve query performance.
  *
+ * To escape special characters the backslash character '\' can be used, this allows searches to include
+ * characters that would normally be considered modifiers, e.g. `foo\~2` will search for a term "foo~2" instead
+ * of attempting to apply a boost of 2 to the search term "foo".
+ *
  * @typedef {string} lunr.Index~QueryString
  * @example <caption>Simple single term query</caption>
  * hello
@@ -1755,7 +1759,7 @@ lunr.Index.prototype.query = function (fn) {
 
   var query = new lunr.Query(this.fields),
       matchingFields = Object.create(null),
-      queryVector = new lunr.Vector
+      queryVectors = Object.create(null)
 
   fn.call(query, query)
 
@@ -1798,30 +1802,12 @@ lunr.Index.prototype.query = function (fn) {
 
       for (var j = 0; j < expandedTerms.length; j++) {
         /*
-         * For each term calculate the score as the term relates to the
-         * query using the same calculation used to score documents during
-         * indexing. This score will be used to build a vector space
-         * representation  of the query.
-         *
-         * Also need to discover the terms index to insert into the query
-         * vector at the right position
+         * For each term get the posting and termIndex, this is required for
+         * building the query vector.
          */
         var expandedTerm = expandedTerms[j],
             posting = this.invertedIndex[expandedTerm],
             termIndex = posting._index
-
-        /*
-         * Upserting the found query term, along with its term index
-         * into the vector representing the query. It is here that
-         * any boosts are applied to the score. They could have been
-         * applied when calculating the score above, but that expression
-         * is already quite busy.
-         *
-         * Using upsert because there could already be an entry in the vector
-         * for the term we are working with. In that case we just add the scores
-         * together.
-         */
-        queryVector.upsert(termIndex, 1 * clause.boost, function (a, b) { return a + b })
 
         for (var k = 0; k < clause.fields.length; k++) {
           /*
@@ -1835,6 +1821,25 @@ lunr.Index.prototype.query = function (fn) {
           var field = clause.fields[k],
               fieldPosting = posting[field],
               matchingDocumentRefs = Object.keys(fieldPosting)
+
+          /*
+           * To support field level boosts a query vector is created per
+           * field. This vector is populated using the termIndex found for
+           * the term and a unit value with the appropriate boost applied.
+           *
+           * If the query vector for this field does not exist yet it needs
+           * to be created.
+           */
+          if (!(field in queryVectors)) {
+            queryVectors[field] = new lunr.Vector
+          }
+
+          /*
+           * Using upsert because there could already be an entry in the vector
+           * for the term we are working with. In that case we just add the scores
+           * together.
+           */
+          queryVectors[field].upsert(termIndex, 1 * clause.boost, function (a, b) { return a + b })
 
           for (var l = 0; l < matchingDocumentRefs.length; l++) {
             /*
@@ -1867,20 +1872,17 @@ lunr.Index.prototype.query = function (fn) {
 
   for (var i = 0; i < matchingFieldRefs.length; i++) {
     /*
-     * With all the matching documents found they now need
-     * to be sorted by their relevance to the query. This
-     * is done by retrieving the documents vector representation
-     * and then finding its similarity with the query vector
-     * that was constructed earlier.
+     * Currently we have document fields that match the query, but we
+     * need to return documents. The matchData and scores are combined
+     * from multiple fields belonging to the same document.
      *
-     * This score, along with the document ref and any metadata
-     * we collected into a lunr.MatchData instance are stored
-     * in the results array ready for returning to the caller
+     * Scores are calculated by field, using the query vectors created
+     * above, and combined into a final document score using addition.
      */
     var fieldRef = lunr.FieldRef.fromString(matchingFieldRefs[i]),
         docRef = fieldRef.docRef,
         fieldVector = this.fieldVectors[fieldRef],
-        score = queryVector.similarity(fieldVector)
+        score = queryVectors[fieldRef.fieldName].similarity(fieldVector)
 
     if (docRef in results) {
       results[docRef].score += score
@@ -1894,6 +1896,10 @@ lunr.Index.prototype.query = function (fn) {
     }
   }
 
+  /*
+   * The results object needs to be converted into a list
+   * of results, sorted by score before being returned.
+   */
   return Object.keys(results)
     .map(function (key) {
       return results[key]
@@ -2358,6 +2364,29 @@ lunr.Query = function (allFields) {
   this.allFields = allFields
 }
 
+/**
+ * Constants for indicating what kind of automatic wildcard insertion will be used when constructing a query clause.
+ *
+ * This allows wildcards to be added to the beginning and end of a term without having to manually do any string
+ * concatenation.
+ *
+ * The wildcard constants can be bitwise combined to select both leading and trailing wildcards.
+ *
+ * @constant
+ * @default
+ * @property {number} wildcard.NONE - The term will have no wildcards inserted, this is the default behaviour
+ * @property {number} wildcard.LEADING - Prepend the term with a wildcard, unless a leading wildcard already exists
+ * @property {number} wildcard.TRAILING - Append a wildcard to the term, unless a trailing wildcard already exists
+ * @see lunr.Query~Clause
+ * @see lunr.Query#clause
+ * @see lunr.Query#term
+ * @example <caption>query term with trailing wildcard</caption>
+ * query.term('foo', { wildcard: lunr.Query.wildcard.TRAILING })
+ * @example <caption>query term with leading and trailing wildcard</caption>
+ * query.term('foo', {
+ *   wildcard: lunr.Query.wildcard.LEADING | lunr.Query.wildcard.TRAILING
+ * })
+ */
 lunr.Query.wildcard = new String ("*")
 lunr.Query.wildcard.NONE = 0
 lunr.Query.wildcard.LEADING = 1
@@ -2369,9 +2398,10 @@ lunr.Query.wildcard.TRAILING = 2
  *
  * @typedef {Object} lunr.Query~Clause
  * @property {string[]} fields - The fields in an index this clause should be matched against.
- * @property {number} boost - Any boost that should be applied when matching this clause.
+ * @property {number} [boost=1] - Any boost that should be applied when matching this clause.
  * @property {number} [editDistance] - Whether the term should have fuzzy matching applied, and how fuzzy the match should be.
  * @property {boolean} [usePipeline] - Whether the term should be passed through the search pipeline.
+ * @property {number} [wildcard=0] - Whether the term should have wildcards appended or prepended.
  */
 
 /**
@@ -2381,6 +2411,7 @@ lunr.Query.wildcard.TRAILING = 2
  * a default boost of 1 is applied to the clause.
  *
  * @param {lunr.Query~Clause} clause - The clause to add to this query.
+ * @see lunr.Query~Clause
  * @returns {lunr.Query}
  */
 lunr.Query.prototype.clause = function (clause) {
@@ -2420,6 +2451,16 @@ lunr.Query.prototype.clause = function (clause) {
  * @param {string} term - The term to add to the query.
  * @param {Object} [options] - Any additional properties to add to the query clause.
  * @returns {lunr.Query}
+ * @see lunr.Query#clause
+ * @see lunr.Query~Clause
+ * @example <caption>adding a single term to a query</caption>
+ * query.term("foo")
+ * @example <caption>adding a single term to a query and specifying search fields, term boost and automatic trailing wildcard</caption>
+ * query.term("foo", {
+ *   fields: ["title"],
+ *   boost: 10,
+ *   wildcard: lunr.Query.wildcard.TRAILING
+ * })
  */
 lunr.Query.prototype.term = function (term, options) {
   var clause = options || {}
@@ -2443,6 +2484,7 @@ lunr.QueryLexer = function (str) {
   this.length = str.length
   this.pos = 0
   this.start = 0
+  this.escapeCharPositions = []
 }
 
 lunr.QueryLexer.prototype.run = function () {
@@ -2453,10 +2495,27 @@ lunr.QueryLexer.prototype.run = function () {
   }
 }
 
+lunr.QueryLexer.prototype.sliceString = function () {
+  var subSlices = [],
+      sliceStart = this.start,
+      sliceEnd = this.pos
+
+  for (var i = 0; i < this.escapeCharPositions.length; i++) {
+    sliceEnd = this.escapeCharPositions[i]
+    subSlices.push(this.str.slice(sliceStart, sliceEnd))
+    sliceStart = sliceEnd + 1
+  }
+
+  subSlices.push(this.str.slice(sliceStart, this.pos))
+  this.escapeCharPositions.length = 0
+
+  return subSlices.join('')
+}
+
 lunr.QueryLexer.prototype.emit = function (type) {
   this.lexemes.push({
     type: type,
-    str: this.str.slice(this.start, this.pos),
+    str: this.sliceString(),
     start: this.start,
     end: this.pos
   })
@@ -2464,8 +2523,13 @@ lunr.QueryLexer.prototype.emit = function (type) {
   this.start = this.pos
 }
 
+lunr.QueryLexer.prototype.escapeCharacter = function () {
+  this.escapeCharPositions.push(this.pos - 1)
+  this.pos += 1
+}
+
 lunr.QueryLexer.prototype.next = function () {
-  if (this.pos == this.length) {
+  if (this.pos >= this.length) {
     return lunr.QueryLexer.EOS
   }
 
@@ -2574,6 +2638,12 @@ lunr.QueryLexer.lexText = function (lexer) {
       return lunr.QueryLexer.lexEOS
     }
 
+    // Escape character is '\'
+    if (char.charCodeAt(0) == 92) {
+      lexer.escapeCharacter()
+      continue
+    }
+
     if (char == ":") {
       return lunr.QueryLexer.lexField
     }
@@ -2649,7 +2719,12 @@ lunr.QueryParser.parseFieldOrTerm = function (parser) {
     case lunr.QueryLexer.TERM:
       return lunr.QueryParser.parseTerm
     default:
-      var errorMessage = "expected either a field or a term, found " + lexeme.type + " with value '" + lexeme.str + "'"
+      var errorMessage = "expected either a field or a term, found " + lexeme.type
+
+      if (lexeme.str.length >= 1) {
+        errorMessage += " with value '" + lexeme.str + "'"
+      }
+
       throw new lunr.QueryParseError (errorMessage, lexeme.start, lexeme.end)
   }
 }
@@ -2662,7 +2737,7 @@ lunr.QueryParser.parseField = function (parser) {
   }
 
   if (parser.query.allFields.indexOf(lexeme.str) == -1) {
-    var possibleFields = parser.query.allFields.map(function (f) { return "'" + f + "'" }).join(),
+    var possibleFields = parser.query.allFields.map(function (f) { return "'" + f + "'" }).join(', '),
         errorMessage = "unrecognised field '" + lexeme.str + "', possible fields: " + possibleFields
 
     throw new lunr.QueryParseError (errorMessage, lexeme.start, lexeme.end)
@@ -2681,7 +2756,7 @@ lunr.QueryParser.parseField = function (parser) {
     case lunr.QueryLexer.TERM:
       return lunr.QueryParser.parseTerm
     default:
-      var errorMessage = "expecting a field, found '" + nextLexeme.type + "'"
+      var errorMessage = "expecting term, found '" + nextLexeme.type + "'"
       throw new lunr.QueryParseError (errorMessage, nextLexeme.start, nextLexeme.end)
   }
 }
