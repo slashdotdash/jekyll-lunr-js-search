@@ -30,6 +30,7 @@
       this.template = this.compileTemplate($(options.template));
       this.titleMsg = options.titleMsg;
       this.emptyMsg = options.emptyMsg;
+      this.onAfterResultShow = options.onAfterResultShow;
 
       this.initialize();
     }
@@ -107,6 +108,7 @@
         });
 
         this.displayResults(results);
+        this.onAfterResultShow();
       }
     };
 
@@ -156,6 +158,7 @@
     results   : '#search-results',          // selector for containing search results element
     template  : '#search-results-template', // selector for Mustache.js template
     titleMsg  : '<h1>Search results<h1>',   // message attached in front of results
-    emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results
+    emptyMsg  : '<p>Nothing found.</p>',    // shown message if search returns no results
+    onAfterResultShow: function() {}        // a hook to process the page after the search results have been shown
   };
 })(jQuery);
