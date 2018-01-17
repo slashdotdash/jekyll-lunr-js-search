@@ -40,7 +40,7 @@ task :concat_js do
     'bower_components/mustache/mustache.js',
     'bower_components/date.format/date.format.js',
     'bower_components/uri.js/src/URI.js',
-    'bower_components/lunr.js/lunr.min.js',
+    'bower_components/lunr.js/lunr.js',
     'js/jquery.lunr.search.js'
   ]
 
@@ -51,21 +51,20 @@ task :concat_js do
   end
 
   # Lunr is stored separately so we can use it for index generation
-  FileUtils.cp('bower_components/lunr.js/lunr.min.js', 'build/lunr.min.js')
+  FileUtils.cp('bower_components/lunr.js/lunr.js', 'build/lunr.js')
 end
 
 task :minify_js do
-  minified, map = Uglifier.new.compile(File.read('build/search.js'))
-  File.open('build/search.min.js', 'w') do |file|
-    file.puts minified
-  end
-end
-
-task :minify_js_map do
   minified, map = Uglifier.new.compile_with_map(File.read('build/search.js'))
   File.open('build/search.js.map', 'w') { |file| file.write(map) }
   File.open('build/search.min.js', 'w') do |file|
     file.puts minified
     file.write "//# sourceMappingURL=search.js.map"
+  end
+  minified, map = Uglifier.new.compile_with_map(File.read('build/lunr.js'))
+  File.open('build/lunr.js.map', 'w') { |file| file.write(map) }
+  File.open('build/lunr.min.js', 'w') do |file|
+    file.puts minified
+    file.write "//# sourceMappingURL=lunr.js.map"
   end
 end

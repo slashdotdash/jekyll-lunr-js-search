@@ -172,6 +172,43 @@ You can choose to store `index.json`, `search.min.js` and `lunr.min.js` in a dif
     lunr_search:
       js_dir: "javascript"
 
+## 11. Indexed Fields
+ 
+To customize which fields are indexed the "fields" map can be overridden,
+e.g. to also make custom front matter fields searchable. The choice of fields has strong influence on the
+search results since lunr 2.1.
+The defaults are:
+
+    lunr_search: 
+      fields:
+        - title
+        - categories
+        - tags
+        - body
+        
+`title`, `date`, `url`, `is_post` and the `body` are special names for Jekyll built-ins. 
+Since lunr.js 2.1 the index has per-field data, so all fields influence the results
+at comparable weight independently of the text length in the field. Boosting is therefore less
+necessary but can still be done at query time (but not at index time). 
+
+## 12. Stored Document Data for use in the Template
+
+To customize which fields' full values are put into the `index.json` file for use in the search results template,
+a `template_fields` list can be configured.
+E.g. you can add a custom `description` front matter field for the preview or exclude fields to reduce the index file size. 
+The fields do not necessarily be indexed, too. The defaults are: 
+
+    lunr_search: 
+      template_fields:
+        - title
+        - url
+        - date
+        - categories
+        - tags
+        - is_post
+
+Please note that adding the `body` as a template field will make your `index.json` file unsusably large.  
+
 ## Demo
 
 Search plugin is deployed to [10consulting.com/search](http://10consulting.com/search/).

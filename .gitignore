@@ -18,3 +18,7 @@ tmp
 .yardoc
 _yardoc
 doc/
+# jetbrains IDE settings dir
+.idea/
+# do not commit gems installed locally
+vendor/

@@ -3,20 +3,24 @@ require 'nokogiri'
 module Jekyll
   module LunrJsSearch
     class SearchEntry
-      def self.create(site, renderer)
+      def self.create(site, renderer, data_field_names)
         if site.is_a?(Jekyll::Page) or site.is_a?(Jekyll::Document)
           if defined?(site.date)
             date = site.date
           else
             date = nil
           end
-          categories = site.data['categories']
-          tags = site.data['tags']
+
+          datafields = {}
+          data_field_names.each do |fieldname|
+            datafields[fieldname] = site.data[fieldname]
+          end
+
           title, url = extract_title_and_url(site)
           is_post = site.is_a?(Jekyll::Document)
           body = renderer.render(site)
 
-          SearchEntry.new(title, url, date, categories, tags, is_post, body, renderer)
+          SearchEntry.new(title, url, date, is_post, body, datafields, renderer)
         else
           raise 'Not supported'
         end
@@ -27,10 +31,10 @@ module Jekyll
         [ data['title'], data['url'] ]
       end
 
-      attr_reader :title, :url, :date, :categories, :tags, :is_post, :body, :collection
+      attr_reader :title, :url, :date, :is_post, :body, :datafields, :collection
 
-      def initialize(title, url, date, categories, tags, is_post, body, collection)
-        @title, @url, @date, @categories, @tags, @is_post, @body, @collection = title, url, date, categories, tags, is_post, body, collection
+      def initialize(title, url, date, is_post, body, datafields, collection)
+        @title, @url, @date, @is_post, @body, @datafields, @collection = title, url, date, is_post, body, datafields, collection
       end
 
       def strip_index_suffix_from_url!
@@ -43,6 +47,17 @@ module Jekyll
           t = x.downcase.gsub(/[^a-z]/, '')
           t.length < min_length || stopwords.include?(t)
         end.join(' ')
+      end
+
+      def get_by_name(field_name)
+        case field_name
+          when 'title' then @title
+          when 'url' then @url
+          when 'date' then @date
+          when 'is_post' then @is_post
+          when 'body' then @body
+          else @datafields[field_name]
+        end
       end
     end
   end
