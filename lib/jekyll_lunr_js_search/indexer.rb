@@ -2,7 +2,7 @@ require 'fileutils'
 require 'net/http'
 require 'json'
 require 'uri'
-require 'v8'
+require 'execjs'
 
 module Jekyll
   module LunrJsSearch
@@ -10,7 +10,7 @@ module Jekyll
       def initialize(config = {})
         super(config)
 
-        lunr_config = {
+        @lunr_config = {
           'excludes' => [],
           'strip_index_html' => false,
           'min_length' => 3,
@@ -24,30 +24,23 @@ module Jekyll
           'js_dir' => 'js'
         }.merge!(config['lunr_search'] || {})
 
-        @js_dir = lunr_config['js_dir']
+        @js_dir = @lunr_config['js_dir']
         gem_lunr = File.join(File.dirname(__FILE__), "../../build/lunr.min.js")
         @lunr_path = File.exist?(gem_lunr) ? gem_lunr : File.join(@js_dir, File.basename(gem_lunr))
         raise "Could not find #{@lunr_path}" if !File.exist?(@lunr_path)
 
-        ctx = V8::Context.new
-        ctx.load(@lunr_path)
-        ctx['indexer'] = proc do |this|
-          this.ref('id')
-          lunr_config['fields'].each_pair do |name, boost|
-            this.field(name, { 'boost' => boost })
-          end
-        end
-        @index = ctx.eval('lunr(indexer)')
+        lunr_src = open(@lunr_path).read
+        ctx = ExecJS.compile(lunr_src)
         @lunr_version = ctx.eval('lunr.version')
         @docs = {}
-        @excludes = lunr_config['excludes']
+        @excludes = @lunr_config['excludes']
 
         # if web host supports index.html as default doc, then optionally exclude it from the url
-        @strip_index_html = lunr_config['strip_index_html']
+        @strip_index_html = @lunr_config['strip_index_html']
 
         # stop word exclusion configuration
-        @min_length = lunr_config['min_length']
-        @stopwords_file = lunr_config['stopwords']
+        @min_length = @lunr_config['min_length']
+        @stopwords_file = @lunr_config['stopwords']
       end
 
       # Index all pages except pages matching any value in config['lunr_excludes'] or with date['exclude_from_search']
@@ -60,6 +53,13 @@ module Jekyll
         items = pages_to_index(site)
         content_renderer = PageRenderer.new(site)
         index = []
+
+        index_js = open(@lunr_path).read
+        index_js << 'var idx = lunr(function() {});'
+        index_js << 'idx.ref(\'id\');';
+        @lunr_config['fields'].each_pair do |name, boost|
+            index_js << "idx.field('#{name}', {'boost': #{boost}});"
+        end
 
         items.each_with_index do |item, i|
           entry = SearchEntry.create(item, content_renderer)
@@ -78,7 +78,7 @@ module Jekyll
             "body" => entry.body
           }
 
-          @index.add(doc)
+          index_js << 'idx.add(' << ::JSON.generate(doc, quirks_mode: true) << ');'
           doc.delete("body")
           @docs[i] = doc
 
@@ -88,9 +88,12 @@ module Jekyll
         FileUtils.mkdir_p(File.join(site.dest, @js_dir))
         filename = File.join(@js_dir, 'index.json')
 
+        ctx = ExecJS.compile(index_js)
+        index = ctx.eval('JSON.stringify(idx)')
+
         total = {
           "docs" => @docs,
-          "index" => @index.to_hash
+          "index" => ::JSON.parse(index)
         }
 
         filepath = File.join(site.dest, filename)
