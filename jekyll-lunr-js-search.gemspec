@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'nokogiri', '~> 1.7'
   s.add_runtime_dependency 'json', '~> 2.0'
-  s.add_runtime_dependency 'therubyracer', '~> 0.12'
+  s.add_runtime_dependency 'execjs', '~> 2.7'
 
   s.add_development_dependency 'rake', '~> 12.0'
   s.add_development_dependency 'uglifier', '~> 3.0'
