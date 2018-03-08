@@ -70,7 +70,7 @@ module Jekyll
           doc = {
             "id" => i,
             "title" => entry.title,
-            "url" => entry.url,
+            "url" => site.baseurl + entry.url,
             "date" => entry.date,
             "categories" => entry.categories,
             "tags" => entry.tags,
